@@ -34,6 +34,23 @@ class Calculator(ttk.Frame):
         self.flag_btn = ttk.Button(self.btn_frame, text="Flag for Review")
         self.flag_btn.pack(fill="x", pady=5)
 
+        # Custom Manual Entry Frame
+        self.manual_frame = ttk.LabelFrame(self, text="Manual Entry", padding=10)
+        self.manual_frame.pack(fill="x", pady=5)
+        
+        # Grid layout for manual inputs
+        ttk.Label(self.manual_frame, text="Amount:").grid(row=0, column=0, padx=5, sticky="w")
+        self.manual_amt = ttk.Entry(self.manual_frame, width=8)
+        self.manual_amt.grid(row=0, column=1, padx=5)
+        
+        ttk.Label(self.manual_frame, text="Qty:").grid(row=0, column=2, padx=5, sticky="w")
+        self.manual_qty = ttk.Entry(self.manual_frame, width=5)
+        self.manual_qty.insert(0, "1")
+        self.manual_qty.grid(row=0, column=3, padx=5)
+        
+        self.add_btn = ttk.Button(self.manual_frame, text="Add", width=6, command=self.add_manual_entry)
+        self.add_btn.grid(row=0, column=4, padx=5)
+
         # AI Results Section
         self.results_frame = ttk.LabelFrame(self, text="Detected Transactions", padding=10)
         self.results_frame.pack(fill="both", expand=True, pady=10)
@@ -50,9 +67,60 @@ class Calculator(ttk.Frame):
         # Summary Label below tree
         self.total_label = ttk.Label(self.results_frame, text="Sum: $0.00", font=("Segoe UI", 10, "bold"), anchor="e")
         self.total_label.pack(fill="x", pady=(5, 0))
+        
+        # List Controls
+        ctrl_frame = ttk.Frame(self.results_frame)
+        ctrl_frame.pack(fill="x", pady=5)
+        ttk.Button(ctrl_frame, text="Delete Selected", command=self.delete_entry).pack(side="right", padx=2)
+        ttk.Button(ctrl_frame, text="Clear All", command=self.clear_all).pack(side="right", padx=2)
 
     def get_verified_amount(self):
         return self.verify_value.get()
+        
+    def get_calculated_amount(self):
+        return self.calc_value.get()
+        
+    def add_manual_entry(self):
+        try:
+            amt = float(self.manual_amt.get())
+            qty = int(self.manual_qty.get())
+            sub = amt * qty
+            self.tree.insert("", "end", values=(f"${amt:.2f}", qty, f"${sub:.2f}"))
+            self.recalculate()
+            # Reset
+            self.manual_amt.delete(0, tk.END)
+            self.manual_qty.delete(0, tk.END)
+            self.manual_qty.insert(0, "1")
+        except ValueError:
+            pass # Ignore invalid inputs
+            
+    def delete_entry(self):
+        selection = self.tree.selection()
+        if selection:
+            for item in selection:
+                self.tree.delete(item)
+            self.recalculate()
+            
+    def clear_all(self):
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        self.verify_value.delete(0, tk.END)
+        self.recalculate()
+        
+    def recalculate(self):
+        total = 0.0
+        for item in self.tree.get_children():
+            # values is a tuple of strings ("$5.50", "2", "$11.00")
+            # We can re-sum subtotal
+            vals = self.tree.item(item)['values']
+            # Remove '$' and convert
+            sub_str = str(vals[2]).replace('$', '').replace(',', '')
+            total += float(sub_str)
+            
+        # Update UI
+        self.calc_value.delete(0, tk.END)
+        self.calc_value.insert(0, f"{total:.2f}")
+        self.total_label.config(text=f"Sum: ${total:.2f}")
 
     def populate_results(self, tolls, total):
         # Clear existing
@@ -73,6 +141,4 @@ class Calculator(ttk.Frame):
         self.total_label.config(text=f"Sum: ${total:.2f}")
 
     def on_analyze(self):
-        # Placeholder / Mock
-        # This is now overridden by App to call real AI
         pass

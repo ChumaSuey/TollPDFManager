@@ -42,6 +42,7 @@ class TollManagerApp(ttk.Frame):
         # Bind Save Button from Calculator
         self.calculator.save_btn.config(command=self.on_save_next)
         self.calculator.analyze_btn.config(command=self.on_run_analysis)
+        self.calculator.flag_btn.config(command=self.on_flag_file)
         
     def load_pdf(self, event):
         selection = self.pdf_list.tree.selection()
@@ -51,6 +52,14 @@ class TollManagerApp(ttk.Frame):
         item = self.pdf_list.tree.item(selection[0])
         if item['values']:
             full_path = item['values'][0]
+            display_text = item['text']
+            
+            # Update Flag Button Text
+            if display_text.startswith("🚩 "):
+                self.calculator.flag_btn.config(text="Unflag")
+            else:
+                self.calculator.flag_btn.config(text="Flag for Review")
+            
             print(f"Attempting to open: {full_path}") # Debug
             if self.pdf_handler.open_pdf(full_path):
                 print("PDF Opened successfully. Showing page...")
@@ -124,9 +133,18 @@ class TollManagerApp(ttk.Frame):
             return
 
         verified_val = self.calculator.get_verified_amount()
-        if not verified_val:
-            print("No verified value entered.")
-            # Optional: Warning messagebox?
+        calculated_val = self.calculator.get_calculated_amount()
+        
+        final_amount = None
+        
+        # Priority Logic
+        if verified_val and verified_val.strip():
+             final_amount = verified_val
+        elif calculated_val and calculated_val.strip():
+             final_amount = calculated_val
+             
+        if not final_amount:
+            print("No value to save (neither Verified nor Calculated).")
             return
 
         pdf_name = os.path.basename(self.pdf_handler.path)
@@ -135,7 +153,7 @@ class TollManagerApp(ttk.Frame):
         data = {
             "PDF Name": pdf_name,
             "Page Number": page_num,
-            "Total Amount": verified_val
+            "Total Amount": final_amount
         }
         
         # 2. Save
@@ -176,4 +194,13 @@ class TollManagerApp(ttk.Frame):
         
         # Populate
         self.calculator.populate_results(tolls, total)
+        # Populate
+        self.calculator.populate_results(tolls, total)
         print("Analysis Complete.")
+
+    def on_flag_file(self):
+        is_flagged = self.pdf_list.toggle_flag_current()
+        if is_flagged:
+            self.calculator.flag_btn.config(text="Unflag")
+        else:
+            self.calculator.flag_btn.config(text="Flag for Review")

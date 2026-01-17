@@ -57,3 +57,25 @@ class PDFList(ttk.Frame):
     def on_select(self, event):
         # To be bound by the main app controller
         pass
+
+    def toggle_flag_current(self):
+        selection = self.tree.selection()
+        if not selection:
+            return
+            
+        item_id = selection[0]
+        current_text = self.tree.item(item_id, "text")
+        
+        prefix = "🚩 "
+        
+        if current_text.startswith(prefix):
+            # Unflag
+            new_text = current_text[len(prefix):]
+            is_flagged = False
+        else:
+            # Flag
+            new_text = prefix + current_text
+            is_flagged = True
+            
+        self.tree.item(item_id, text=new_text)
+        return is_flagged

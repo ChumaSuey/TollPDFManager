@@ -1,0 +1,7 @@
+sv-ttk
+pymupdf
+pillow
+pandas
+openpyxl
+google-genai
+python-dotenv

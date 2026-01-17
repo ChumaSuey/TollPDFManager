@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+.idea/
+.vscode/
+Peajes 2026 Calculo.xlsx
+models_list.txt

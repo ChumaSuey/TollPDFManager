@@ -2,20 +2,23 @@ import os
 import pandas as pd
 from datetime import datetime
 
-EXCEL_FILENAME = "Peajes 2026 Calculo.xlsx"
-
+# EXCEL_FILENAME removed, generating dynamically
+    
 class DataService:
     @staticmethod
     def save_toll_entry(folder_path, data):
         """
         Saves a toll entry to the Excel file in the specified folder.
         Creates the file if it doesn't exist.
+        The filename contains the current year (e.g., "Peajes 2026 Calculo.xlsx").
         
         Args:
             folder_path (str): Directory to save the Excel file.
             data (dict): Dictionary containing row data (PDF Name, Page, Amount, etc.)
         """
-        file_path = os.path.join(folder_path, EXCEL_FILENAME)
+        current_year = datetime.now().year
+        filename = f"Peajes {current_year} Calculo.xlsx"
+        file_path = os.path.join(folder_path, filename)
         
         # Add timestamp
         data["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -46,7 +49,7 @@ class DataService:
                 # Create new
                 df_new.to_excel(file_path, index=False)
                 
-            return True, f"Saved to {EXCEL_FILENAME}"
+            return True, f"Saved to {filename}"
             
         except Exception as e:
             print(f"Error saving to Excel: {e}")

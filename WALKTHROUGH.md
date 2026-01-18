@@ -7,7 +7,8 @@ This guide explains how to use the application effectively for your daily workfl
 ### 1. Navigation (Viewer)
 
 - **Smart Scroll**: Clicking "Next >" at the end of a document automatically loads the *next PDF file* in the folder.
-- **Zoom**: Use the **🔍-** / **🔍+** buttons or `Ctrl + MouseWheel` to inspect stamps closely. Zoom level is remembered as you browse.
+- **Zoom**: Use the **🔍-** / **🔍+** buttons or `Ctrl + MouseWheel` to inspect stamps closely.
+- **Reset**: Click **"1:1"** to instantly restore default 100% zoom. Zoom level is remembered as you browse.
 
 ### 2. The Calculator (Right Pane)
 

@@ -52,6 +52,9 @@ class PDFViewer(ttk.Frame):
         
         self.zoom_in_btn = ttk.Button(self.nav_frame, text="🔍+", width=4, command=lambda: self.change_zoom(0.2))
         self.zoom_in_btn.pack(side="left", padx=2)
+        
+        self.zoom_reset_btn = ttk.Button(self.nav_frame, text="1:1", width=4, command=self.reset_zoom)
+        self.zoom_reset_btn.pack(side="left", padx=2)
 
         # State
         self.current_image = None
@@ -77,6 +80,11 @@ class PDFViewer(ttk.Frame):
             self.zoom_level = new_zoom
             self.zoom_label.config(text=f"{int(self.zoom_level * 100)}%")
             self.event_generate("<<ZoomChanged>>")
+            
+    def reset_zoom(self):
+        self.zoom_level = 1.0
+        self.zoom_label.config(text="100%")
+        self.event_generate("<<ZoomChanged>>")
 
     def display_image(self, pil_image, page_num, total_pages):
         self.canvas.delete("all")

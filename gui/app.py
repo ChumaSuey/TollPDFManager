@@ -63,8 +63,8 @@ class TollManagerApp(ttk.Frame):
             print(f"Attempting to open: {full_path}") # Debug
             if self.pdf_handler.open_pdf(full_path):
                 print("PDF Opened successfully. Showing page...")
-                # Reset zoom on new file? Or keep user preference?
-                # User usually likes persistence, let's keep current zoom_level
+                # Clear calculator for new file
+                self.calculator.clear_all()
                 self.show_current_page()
             else:
                 print("Failed to open PDF.")
@@ -82,6 +82,7 @@ class TollManagerApp(ttk.Frame):
     def prev_page(self, event=None):
         if self.pdf_handler.current_page_idx > 0:
             self.pdf_handler.current_page_idx -= 1
+            self.calculator.clear_all() # Clear data
             self.show_current_page()
         else:
             # Try to go to previous file
@@ -90,6 +91,7 @@ class TollManagerApp(ttk.Frame):
     def next_page(self, event=None):
         if self.pdf_handler.current_page_idx < self.pdf_handler.get_page_count() - 1:
             self.pdf_handler.current_page_idx += 1
+            self.calculator.clear_all() # Clear data
             self.show_current_page()
         else:
             # Try to go to next file
@@ -164,10 +166,8 @@ class TollManagerApp(ttk.Frame):
         if success:
             print(msg)
             # 3. Next (Page or File)
+            # This calls next_page(), which now triggers self.calculator.clear_all()
             self.next_page()
-            # Clear input?
-            self.calculator.verify_value.delete(0, tk.END)
-            self.calculator.calc_value.delete(0, tk.END)
         else:
             print(f"Save Failed: {msg}")
 

@@ -49,6 +49,9 @@ If the list calculation is slightly off but you know the real total:
 
 - Clicking **"Save & Next"** saves the current page's total to Excel.
 - **Dynamic Filename**: The app automatically saves to `Peajes [Current Year] Calculo.xlsx` (e.g., `Peajes 2026 Calculo.xlsx`). It handles the year change automatically!
+- **Professional Formatting**:
+  - **Calculo (Summary)**: A clean summary sheet with a Title row and columns for "Numero de Peajes" (auto-incremented) and "Total en BS".
+  - **Detalle (Record)**: A background sheet that preserves the PDF Name, Page Number, and Timestamp for every entry to ensure full traceability.
 
 ## 🚀 Pro Tips
 

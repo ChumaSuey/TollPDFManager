@@ -8,7 +8,7 @@ A Python application for managing and verifying toll PDF documents with AI assis
 - **PDF Viewer**: Zoomable viewer with smart navigation (Page & File).
 - **AI Analysis**: Extracts toll amounts using Google Gemini AI.
 - **Verification**: Calculus pane for manual review and correction.
-- **Data Export**: Saves verified data to `Peajes 2026 Calculo.xlsx`.
+- **Data Export**: Saves verified data to `Peajes [Year] Calculo.xlsx` with professional formatting (Sequential numbering, Title headers, and a separate Detail sheet).
 
 ## Setup
 
@@ -24,7 +24,7 @@ A Python application for managing and verifying toll PDF documents with AI assis
     - Create a file named `.env` in this folder.
     - Add the line:
 
-      ```
+      ```text
       GEMINI_API_KEY=your_key_here
       ```
 

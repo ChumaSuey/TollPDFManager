@@ -1,10 +1,44 @@
 import os
+import json
 import pandas as pd
 from datetime import datetime
 
 # EXCEL_FILENAME removed, generating dynamically
-    
+CONFIG_FILE = "config.json"
+
 class DataService:
+    @staticmethod
+    def load_config():
+        if os.path.exists(CONFIG_FILE):
+            try:
+                with open(CONFIG_FILE, 'r') as f:
+                    return json.load(f)
+            except Exception as e:
+                print(f"Error loading config: {e}")
+        return {}
+
+    @staticmethod
+    def save_config(config):
+        try:
+            with open(CONFIG_FILE, 'w') as f:
+                json.dump(config, f, indent=4)
+            return True
+        except Exception as e:
+            print(f"Error saving config: {e}")
+            return False
+
+    @staticmethod
+    def get_excel_path(folder_path=None):
+        config = DataService.load_config()
+        # Priority: Config > Argument > current dir
+        base_folder = config.get("export_folder", folder_path)
+        if not base_folder:
+            base_folder = os.getcwd()
+            
+        current_year = datetime.now().year
+        filename = f"Peajes {current_year} Calculo.xlsx"
+        return os.path.join(base_folder, filename), filename
+
     @staticmethod
     def save_toll_entry(folder_path, data):
         """
@@ -17,12 +51,11 @@ class DataService:
         Following rows: Sequential numbering | Amount
         
         Args:
-            folder_path (str): Directory to save the Excel file.
+            folder_path (str): Default directory if no export folder is configured.
             data (dict): Dictionary containing row data (PDF Name, Page, Amount, etc.)
         """
+        file_path, filename = DataService.get_excel_path(folder_path)
         current_year = datetime.now().year
-        filename = f"Peajes {current_year} Calculo.xlsx"
-        file_path = os.path.join(folder_path, filename)
         
         # Add timestamp
         data["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

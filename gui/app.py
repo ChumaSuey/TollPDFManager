@@ -44,6 +44,9 @@ class TollManagerApp(ttk.Frame):
         self.calculator.analyze_btn.config(command=self.on_run_analysis)
         self.calculator.flag_btn.config(command=self.on_flag_file)
         
+        # Load Config & Init UI
+        self.pdf_list.update_export_ui()
+        
     def load_pdf(self, event):
         selection = self.pdf_list.tree.selection()
         if not selection:

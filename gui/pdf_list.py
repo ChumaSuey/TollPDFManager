@@ -28,8 +28,53 @@ class PDFList(ttk.Frame):
         
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         
+        # Export Setup Section
+        ttk.Separator(self, orient="horizontal").pack(fill="x", pady=15)
+        ttk.Label(self, text="Export Setup", font=("Segoe UI", 10, "bold")).pack(anchor="w")
+        
+        self.export_path_label = ttk.Label(self, text="Path: (Current Folder)", font=("Segoe UI", 8), foreground="gray")
+        self.export_path_label.pack(anchor="w", pady=(2, 5))
+        
+        btn_frame = ttk.Frame(self)
+        btn_frame.pack(fill="x")
+        
+        self.export_btn = ttk.Button(btn_frame, text="Set Export Folder", command=self.select_export_folder)
+        self.export_btn.pack(side="left", fill="x", expand=True)
+        
+        self.status_label = ttk.Label(self, text="", font=("Segoe UI", 8))
+        self.status_label.pack(anchor="w", pady=5)
+        
         self.current_dir = os.getcwd() # Default
         self.refresh_list()
+
+    def select_export_folder(self):
+        from services.data_service import DataService
+        config = DataService.load_config()
+        initial = config.get("export_folder", self.current_dir)
+        
+        folder = filedialog.askdirectory(initialdir=initial)
+        if folder:
+            config["export_folder"] = folder
+            DataService.save_config(config)
+            self.update_export_ui(folder)
+
+    def update_export_ui(self, folder=None):
+        from services.data_service import DataService
+        if not folder:
+            config = DataService.load_config()
+            folder = config.get("export_folder")
+            
+        if folder:
+            self.export_path_label.config(text=f"Path: {os.path.basename(folder)}...")
+            # Check for file
+            file_path, _ = DataService.get_excel_path()
+            if os.path.exists(file_path):
+                self.status_label.config(text="✅ Excel exists in folder", foreground="green")
+            else:
+                self.status_label.config(text="📝 New Excel will be created", foreground="blue")
+        else:
+            self.export_path_label.config(text="Path: (Project Folder)")
+            self.status_label.config(text="")
 
     def select_folder(self):
         folder = filedialog.askdirectory(initialdir=self.current_dir)

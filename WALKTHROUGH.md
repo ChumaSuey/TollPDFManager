@@ -59,3 +59,12 @@ If the list calculation is slightly off but you know the real total:
 - **Shortcuts**:
   - `Left/Right Arrow`: Prev/Next Page.
   - `Ctrl + Wheel`: Zoom.
+  - `Ctrl + H`: Toggle Highlight (Yellow marker).
+
+### 4. Highlight Function 📌
+
+The **highlight** function serves as an internal marker for you to know where to start or track your progress within the toll list.
+
+- **How to use**: Select a PDF and click the **📌 Highlight Item** button, or press `Ctrl + H`.
+- **Effect**: The selected item in the "Archive Space" list will be highlighted with a soft yellow background.
+- **Toggle**: Click **📍 Unhighlight** or press `Ctrl + H` again to remove the marker.

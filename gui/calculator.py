@@ -44,6 +44,9 @@ class Calculator(ttk.Frame):
         self.flag_btn = ttk.Button(self.btn_frame, text="Flag for Review")
         self.flag_btn.pack(fill="x", pady=5)
 
+        self.highlight_btn = ttk.Button(self.btn_frame, text="📌 Highlight Item")
+        self.highlight_btn.pack(fill="x", pady=5)
+
         # Custom Manual Entry Frame
         self.manual_frame = ttk.LabelFrame(self, text="Manual Entry", padding=10)
         self.manual_frame.pack(fill="x", pady=5)

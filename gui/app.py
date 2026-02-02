@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
+import os
 from .pdf_list import PDFList
 from .pdf_viewer import PDFViewer
 from .calculator import Calculator
@@ -43,6 +44,11 @@ class TollManagerApp(ttk.Frame):
         self.calculator.save_btn.config(command=self.on_save_next)
         self.calculator.analyze_btn.config(command=self.on_run_analysis)
         self.calculator.flag_btn.config(command=self.on_flag_file)
+        self.calculator.highlight_btn.config(command=self.on_highlight_file)
+        
+        # Keyboard shortcuts
+        parent.bind("<Control-h>", lambda e: self.on_highlight_file())
+        parent.bind("<Control-H>", lambda e: self.on_highlight_file())
         
         # Load Config & Init UI
         self.pdf_list.update_export_ui()
@@ -63,6 +69,13 @@ class TollManagerApp(ttk.Frame):
             else:
                 self.calculator.flag_btn.config(text="Flag for Review")
             
+            # Update Highlight Button Text
+            current_tags = self.pdf_list.tree.item(selection[0], "tags")
+            if "highlight" in current_tags:
+                self.calculator.highlight_btn.config(text="📍 Unhighlight")
+            else:
+                self.calculator.highlight_btn.config(text="📌 Highlight Item")
+            
             print(f"Attempting to open: {full_path}") # Debug
             if self.pdf_handler.open_pdf(full_path):
                 print("PDF Opened successfully. Showing page...")
@@ -81,6 +94,14 @@ class TollManagerApp(ttk.Frame):
         img = self.pdf_handler.get_page_image(page_idx, zoom=zoom)
         # Pass 1-based index for display
         self.pdf_viewer.display_image(img, page_idx + 1, self.pdf_handler.get_page_count())
+
+    def on_highlight_file(self, event=None):
+        is_highlighted = self.pdf_list.toggle_highlight_current()
+        if is_highlighted:
+            self.calculator.highlight_btn.config(text="📍 Unhighlight")
+        else:
+            self.calculator.highlight_btn.config(text="📌 Highlight Item")
+        return "break" # Prevent event propagation if needed
 
     def prev_page(self, event=None):
         if self.pdf_handler.current_page_idx > 0:
@@ -132,47 +153,51 @@ class TollManagerApp(ttk.Frame):
                 print("Start of file list.")
             
     def on_save_next(self):
-        # 1. Gather Data
-        if not self.pdf_handler.path:
-            print("No PDF open to save context for.")
-            return
-
-        verified_val = self.calculator.get_verified_amount()
-        calculated_val = self.calculator.get_calculated_amount()
-        
-        final_amount = None
-        
-        # Priority Logic
-        if verified_val and verified_val.strip():
-             final_amount = verified_val
-        elif calculated_val and calculated_val.strip():
-             final_amount = calculated_val
-             
-        if not final_amount:
-            print("No value to save (neither Verified nor Calculated).")
-            return
-
-        pdf_name = os.path.basename(self.pdf_handler.path)
-        page_num = self.pdf_handler.current_page_idx + 1 # 1-based for human readability
-        
-        data = {
-            "PDF Name": pdf_name,
-            "Page Number": page_num,
-            "Total Amount": final_amount
-        }
-        
-        # 2. Save
-        # Use current_dir from pdf_list as save location
-        folder = self.pdf_list.current_dir
-        success, msg = DataService.save_toll_entry(folder, data)
-        
-        if success:
-            print(msg)
-            # 3. Next (Page or File)
-            # This calls next_page(), which now triggers self.calculator.clear_all()
-            self.next_page()
-        else:
-            print(f"Save Failed: {msg}")
+        try:
+            # 1. Gather Data
+            if not self.pdf_handler.path:
+                messagebox.showerror("Error", "No PDF open to save context for.")
+                return
+    
+            verified_val = self.calculator.get_verified_amount()
+            calculated_val = self.calculator.get_calculated_amount()
+            
+            final_amount = None
+            
+            # Priority Logic
+            if verified_val and verified_val.strip():
+                 final_amount = verified_val
+            elif calculated_val and calculated_val.strip():
+                 final_amount = calculated_val
+                 
+            if not final_amount:
+                messagebox.showwarning("Warning", "No value to save. Please enter a Verified Value or ensure Calculation is complete.")
+                return
+    
+            pdf_name = os.path.basename(self.pdf_handler.path)
+            page_num = self.pdf_handler.current_page_idx + 1 # 1-based for human readability
+            
+            data = {
+                "PDF Name": pdf_name,
+                "Page Number": page_num,
+                "Total Amount": final_amount
+            }
+            
+            # 2. Save
+            # Use current_dir from pdf_list as save location
+            folder = self.pdf_list.current_dir
+            success, msg = DataService.save_toll_entry(folder, data)
+            
+            if success:
+                messagebox.showinfo("Success", msg)
+                # 3. Next (Page or File)
+                # This calls next_page(), which now triggers self.calculator.clear_all()
+                self.next_page()
+            else:
+                messagebox.showerror("Error", f"Save Failed: {msg}")
+        except Exception as e:
+            messagebox.showerror("Critical Error", f"An unexpected error occurred during save:\n{str(e)}")
+            print(f"Critical Error in on_save_next: {e}")
 
     def on_run_analysis(self):
         if not self.pdf_handler.path:

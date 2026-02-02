@@ -26,6 +26,9 @@ class PDFList(ttk.Frame):
         self.scrollbar.pack(side="right", fill="y")
         self.tree.configure(yscrollcommand=self.scrollbar.set)
         
+        # Configure tags for highlighting
+        self.tree.tag_configure("highlight", background="#FFFFCC") # Soft pastel yellow
+        
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
         
         # Export Setup Section
@@ -124,3 +127,21 @@ class PDFList(ttk.Frame):
             
         self.tree.item(item_id, text=new_text)
         return is_flagged
+
+    def toggle_highlight_current(self):
+        selection = self.tree.selection()
+        if not selection:
+            return
+            
+        item_id = selection[0]
+        current_tags = list(self.tree.item(item_id, "tags"))
+        
+        if "highlight" in current_tags:
+            current_tags.remove("highlight")
+            is_highlighted = False
+        else:
+            current_tags.append("highlight")
+            is_highlighted = True
+            
+        self.tree.item(item_id, tags=current_tags)
+        return is_highlighted

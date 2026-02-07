@@ -7,6 +7,17 @@ from google import genai
 load_dotenv()
 
 
+def list_models() -> list:
+    models = []
+    api_key = os.getenv("GEMINI_API_KEY")
+    if api_key:
+        client = genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+        for m in client.models.list():
+            name = getattr(m, "name", None) or str(m)
+            models.append(name.replace("models/", ""))
+    return models
+
+
 class TollAnalyzer:
     def __init__(self):
         self.api_key = os.getenv("GEMINI_API_KEY")
@@ -42,7 +53,6 @@ class TollAnalyzer:
             return {"error": "API Key missing or Client init failed", "tolls": []}
 
         try:
-            # TODO: Analyze PDF page image using Gemini
             prompt = """
             Analyze this image of a toll report.
             Identify all toll amounts found on the page.

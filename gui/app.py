@@ -222,7 +222,11 @@ class TollManagerApp(ttk.Frame):
         # Call Service
         # Use threading to prevent UI freeze?
         # For now, sync is okay for prototype.
-        result = self.ai_service.analyze_page(img)
+        model = self.calculator.gemini_model.get()
+        if model:
+            result = self.ai_service.analyze_page(img, model=model)
+        else:
+            result = self.ai_service.analyze_page(img)
 
         # Check error
         if "error" in result:

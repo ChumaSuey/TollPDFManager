@@ -1,6 +1,10 @@
 import tkinter as tk
 from tkinter import ttk
 
+from google import genai
+
+from services.ai_service import list_models
+
 
 class Calculator(ttk.Frame):
     def __init__(self, parent):
@@ -29,6 +33,17 @@ class Calculator(ttk.Frame):
         )
         self.verify_value = ttk.Entry(self.inputs_frame)
         self.verify_value.pack(fill="x", pady=(0, 10))
+
+        ttk.Label(self.inputs_frame, text="Google Models:").pack(
+            anchor="w", pady=(5, 0)
+        )
+        self.gemini_model = ttk.Combobox(
+            self.inputs_frame,
+            values=list_models(),
+            state="readonly",
+        )
+        self.gemini_model.set("gemini-flash-lite-latest")
+        self.gemini_model.pack(fill="x", pady=(0, 10))
 
         # ... (Buttons skipped for brevity if unchanged, but context requires them)
         # Actually I need to be careful with context matching.

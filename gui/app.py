@@ -1,23 +1,25 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
 import os
+import tkinter as tk
+from tkinter import messagebox, ttk
+
+from services.ai_service import TollAnalyzer
+from services.data_service import DataService
+from services.pdf_service import PDFHandler
+
+from .calculator import Calculator
 from .pdf_list import PDFList
 from .pdf_viewer import PDFViewer
-from .calculator import Calculator
-from .calculator import Calculator
-from services.pdf_service import PDFHandler
-from services.data_service import DataService
-from services.ai_service import TollAnalyzer
+
 
 class TollManagerApp(ttk.Frame):
     def __init__(self, parent):
         super().__init__(parent)
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
-        
+
         self.pdf_handler = PDFHandler()
         self.ai_service = TollAnalyzer()
-        
+
         # Main horizontal paned window
         self.paned_window = ttk.PanedWindow(self, orient=tk.HORIZONTAL)
         self.paned_window.grid(row=0, column=0, sticky="nsew")
@@ -33,50 +35,50 @@ class TollManagerApp(ttk.Frame):
         # Right Pane: Calculator/Verification
         self.calculator = Calculator(self.paned_window)
         self.paned_window.add(self.calculator, weight=1)
-        
+
         # Bindings
         self.pdf_list.tree.bind("<<TreeviewSelect>>", self.load_pdf)
         self.pdf_viewer.bind("<<PrevPage>>", self.prev_page)
         self.pdf_viewer.bind("<<NextPage>>", self.next_page)
         self.pdf_viewer.bind("<<ZoomChanged>>", self.on_zoom_changed)
-        
+
         # Bind Save Button from Calculator
         self.calculator.save_btn.config(command=self.on_save_next)
         self.calculator.analyze_btn.config(command=self.on_run_analysis)
         self.calculator.flag_btn.config(command=self.on_flag_file)
         self.calculator.highlight_btn.config(command=self.on_highlight_file)
-        
+
         # Keyboard shortcuts
         parent.bind("<Control-h>", lambda e: self.on_highlight_file())
         parent.bind("<Control-H>", lambda e: self.on_highlight_file())
-        
+
         # Load Config & Init UI
         self.pdf_list.update_export_ui()
-        
+
     def load_pdf(self, event):
         selection = self.pdf_list.tree.selection()
         if not selection:
             return
-            
+
         item = self.pdf_list.tree.item(selection[0])
-        if item['values']:
-            full_path = item['values'][0]
-            display_text = item['text']
-            
+        if item["values"]:
+            full_path = item["values"][0]
+            display_text = item["text"]
+
             # Update Flag Button Text
             if display_text.startswith("🚩 "):
                 self.calculator.flag_btn.config(text="Unflag")
             else:
                 self.calculator.flag_btn.config(text="Flag for Review")
-            
+
             # Update Highlight Button Text
             current_tags = self.pdf_list.tree.item(selection[0], "tags")
             if "highlight" in current_tags:
                 self.calculator.highlight_btn.config(text="📍 Unhighlight")
             else:
                 self.calculator.highlight_btn.config(text="📌 Highlight Item")
-            
-            print(f"Attempting to open: {full_path}") # Debug
+
+            print(f"Attempting to open: {full_path}")  # Debug
             if self.pdf_handler.open_pdf(full_path):
                 print("PDF Opened successfully. Showing page...")
                 # Clear calculator for new file
@@ -93,7 +95,9 @@ class TollManagerApp(ttk.Frame):
         zoom = self.pdf_viewer.zoom_level
         img = self.pdf_handler.get_page_image(page_idx, zoom=zoom)
         # Pass 1-based index for display
-        self.pdf_viewer.display_image(img, page_idx + 1, self.pdf_handler.get_page_count())
+        self.pdf_viewer.display_image(
+            img, page_idx + 1, self.pdf_handler.get_page_count()
+        )
 
     def on_highlight_file(self, event=None):
         is_highlighted = self.pdf_list.toggle_highlight_current()
@@ -101,12 +105,12 @@ class TollManagerApp(ttk.Frame):
             self.calculator.highlight_btn.config(text="📍 Unhighlight")
         else:
             self.calculator.highlight_btn.config(text="📌 Highlight Item")
-        return "break" # Prevent event propagation if needed
+        return "break"  # Prevent event propagation if needed
 
     def prev_page(self, event=None):
         if self.pdf_handler.current_page_idx > 0:
             self.pdf_handler.current_page_idx -= 1
-            self.calculator.clear_all() # Clear data
+            self.calculator.clear_all()  # Clear data
             self.show_current_page()
         else:
             # Try to go to previous file
@@ -115,12 +119,12 @@ class TollManagerApp(ttk.Frame):
     def next_page(self, event=None):
         if self.pdf_handler.current_page_idx < self.pdf_handler.get_page_count() - 1:
             self.pdf_handler.current_page_idx += 1
-            self.calculator.clear_all() # Clear data
+            self.calculator.clear_all()  # Clear data
             self.show_current_page()
         else:
             # Try to go to next file
             self.navigate_file(1)
-            
+
     def navigate_file(self, direction):
         """
         Selects and loads the next (+1) or previous (-1) file in the list.
@@ -128,7 +132,7 @@ class TollManagerApp(ttk.Frame):
         selection = self.pdf_list.tree.selection()
         if not selection:
             return
-            
+
         current_item = selection[0]
         if direction == 1:
             next_item = self.pdf_list.tree.next(current_item)
@@ -136,12 +140,12 @@ class TollManagerApp(ttk.Frame):
                 self.pdf_list.tree.selection_set(next_item)
                 # selection_set doesn't verify visibility or trigger virtual events usually?
                 # But our binding is on <<TreeviewSelect>>.
-                # However, programmatic selection in tkinter often triggers it IF configured right, 
+                # However, programmatic selection in tkinter often triggers it IF configured right,
                 # but often safer to call load manually or ensure event fires.
                 # Let's call load_pdf manually effectively by passing None or mocking event.
-                # Or just let the binding handle it? 
+                # Or just let the binding handle it?
                 # In Tkinter, selection_set triggers <<TreeviewSelect>>.
-                self.pdf_list.tree.see(next_item) # Scroll to it
+                self.pdf_list.tree.see(next_item)  # Scroll to it
             else:
                 print("End of file list.")
         elif direction == -1:
@@ -151,43 +155,48 @@ class TollManagerApp(ttk.Frame):
                 self.pdf_list.tree.see(prev_item)
             else:
                 print("Start of file list.")
-            
+
     def on_save_next(self):
         try:
             # 1. Gather Data
             if not self.pdf_handler.path:
                 messagebox.showerror("Error", "No PDF open to save context for.")
                 return
-    
+
             verified_val = self.calculator.get_verified_amount()
             calculated_val = self.calculator.get_calculated_amount()
-            
+
             final_amount = None
-            
+
             # Priority Logic
             if verified_val and verified_val.strip():
-                 final_amount = verified_val
+                final_amount = verified_val
             elif calculated_val and calculated_val.strip():
-                 final_amount = calculated_val
-                 
+                final_amount = calculated_val
+
             if not final_amount:
-                messagebox.showwarning("Warning", "No value to save. Please enter a Verified Value or ensure Calculation is complete.")
+                messagebox.showwarning(
+                    "Warning",
+                    "No value to save. Please enter a Verified Value or ensure Calculation is complete.",
+                )
                 return
-    
+
             pdf_name = os.path.basename(self.pdf_handler.path)
-            page_num = self.pdf_handler.current_page_idx + 1 # 1-based for human readability
-            
+            page_num = (
+                self.pdf_handler.current_page_idx + 1
+            )  # 1-based for human readability
+
             data = {
                 "PDF Name": pdf_name,
                 "Page Number": page_num,
-                "Total Amount": final_amount
+                "Total Amount": final_amount,
             }
-            
+
             # 2. Save
             # Use current_dir from pdf_list as save location
             folder = self.pdf_list.current_dir
             success, msg = DataService.save_toll_entry(folder, data)
-            
+
             if success:
                 messagebox.showinfo("Success", msg)
                 # 3. Next (Page or File)
@@ -196,22 +205,24 @@ class TollManagerApp(ttk.Frame):
             else:
                 messagebox.showerror("Error", f"Save Failed: {msg}")
         except Exception as e:
-            messagebox.showerror("Critical Error", f"An unexpected error occurred during save:\n{str(e)}")
+            messagebox.showerror(
+                "Critical Error", f"An unexpected error occurred during save:\n{str(e)}"
+            )
             print(f"Critical Error in on_save_next: {e}")
 
     def on_run_analysis(self):
         if not self.pdf_handler.path:
             return
-            
+
         print("Running AI Analysis...")
         # Get high-res image for AI (Zoom 2.0)
         page_idx = self.pdf_handler.current_page_idx
         img = self.pdf_handler.get_page_image(page_idx, zoom=2.0)
-        
+
         # Call Service
         # Use threading to prevent UI freeze? For now, sync is okay for prototype.
         result = self.ai_service.analyze_page(img)
-        
+
         # Check error
         if "error" in result:
             print(f"Analysis Error: {result['error']}")
@@ -219,7 +230,7 @@ class TollManagerApp(ttk.Frame):
 
         tolls = result.get("tolls", [])
         total = result.get("total_calculated", 0.0)
-        
+
         # Populate
         self.calculator.populate_results(tolls, total)
         # Populate

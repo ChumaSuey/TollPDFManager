@@ -211,7 +211,6 @@ class TollManagerApp(ttk.Frame):
             print(f"Critical Error in on_save_next: {e}")
 
     def on_run_analysis(self):
-        # TODO: check this function for use gemini
         if not self.pdf_handler.path:
             return
 

@@ -3,7 +3,6 @@ import os
 
 from dotenv import load_dotenv
 from google import genai
-from langchain_google_genai import ChatGoogleGenerativeAI
 
 load_dotenv()
 
@@ -28,11 +27,6 @@ class TollAnalyzer:
                 print(f"Failed to initialize GenAI Client: {e}")
         else:
             print("Warning: GEMINI_API_KEY not found in environment.")
-
-    def _normalize_model_name(self, model: str) -> str:
-        # La API de Gemini suele listar modelos como "models/<id>".
-        # LangChain normalmente acepta el "<id>" sin el prefijo.
-        return model.removeprefix("models/")
 
     def analyze_page(self, image_data, model: str = "gemini-flash-lite-latest"):
         """
@@ -68,7 +62,7 @@ class TollAnalyzer:
             # New SDK call structure
             # model='gemini-2.0-flash'
             response = self.client.models.generate_content(
-                model=self._normalize_model_name(model),
+                model=model,
                 contents=[prompt, image_data],
             )
 

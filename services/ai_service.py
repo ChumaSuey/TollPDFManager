@@ -42,6 +42,7 @@ class TollAnalyzer:
             return {"error": "API Key missing or Client init failed", "tolls": []}
 
         try:
+            # TODO: Analyze PDF page image using Gemini
             prompt = """
             Analyze this image of a toll report.
             Identify all toll amounts found on the page.

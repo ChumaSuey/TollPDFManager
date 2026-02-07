@@ -211,6 +211,7 @@ class TollManagerApp(ttk.Frame):
             print(f"Critical Error in on_save_next: {e}")
 
     def on_run_analysis(self):
+        # TODO: check this function for use gemini
         if not self.pdf_handler.path:
             return
 
@@ -231,8 +232,6 @@ class TollManagerApp(ttk.Frame):
         tolls = result.get("tolls", [])
         total = result.get("total_calculated", 0.0)
 
-        # Populate
-        self.calculator.populate_results(tolls, total)
         # Populate
         self.calculator.populate_results(tolls, total)
         print("Analysis Complete.")

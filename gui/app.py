@@ -221,7 +221,8 @@ class TollManagerApp(ttk.Frame):
         img = self.pdf_handler.get_page_image(page_idx, zoom=2.0)
 
         # Call Service
-        # Use threading to prevent UI freeze? For now, sync is okay for prototype.
+        # Use threading to prevent UI freeze?
+        # For now, sync is okay for prototype.
         result = self.ai_service.analyze_page(img)
 
         # Check error

@@ -62,40 +62,50 @@ class DataService:
         # Add timestamp
         data["Timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+        # Ensure Total Amount is a number (float)
+        # It might come in as a string with formatting (e.g. from the UI entry)
         try:
-            # Prepare detail data
-            df_detail_new = pd.DataFrame([data])
+            val = data.get("Total Amount", 0)
+            if isinstance(val, str):
+                # Clean up any currency symbols or commas just in case
+                val = val.replace("$", "").replace(",", "")
+            data["Total Amount"] = float(val)
+        except (ValueError, TypeError):
+            data["Total Amount"] = 0.0
 
-            # Prepare summary data (Calculo sheet)
-            # We need to know the next sequence number
+        try:
+            # 1. Determine next sequence number
             next_num = 1
-
             if os.path.exists(file_path):
-                # Load existing to find next number and append detail
+                try:
+                    df_calc = pd.read_excel(file_path, sheet_name="Calculo", skiprows=1)
+                    if not df_calc.empty:
+                        last_num = df_calc.iloc[:, 0].max()
+                        if pd.notna(last_num):
+                            next_num = int(last_num) + 1
+                except Exception:
+                    next_num = 1
+
+            # 2. Prepare data for Detalle sheet
+            # Add sequential 'No.' as the first column
+            detail_data = {"No.": next_num}
+            detail_data.update(data)
+            df_detail_new = pd.DataFrame([detail_data])
+
+            # 3. Prepare data for Calculo sheet
+            df_summary_new = pd.DataFrame(
+                {
+                    "Numero de Peajes": [next_num],
+                    "Total en BS": [data.get("Total Amount", 0)],
+                }
+            )
+
+            # 4. Write to Excel
+            if os.path.exists(file_path):
                 with pd.ExcelWriter(
                     file_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
                 ) as writer:
-                    # Handle Summary Sheet (Calculo)
-                    try:
-                        df_summary_existing = pd.read_excel(
-                            file_path, sheet_name="Calculo", skiprows=1
-                        )
-                        if not df_summary_existing.empty:
-                            last_num = df_summary_existing.iloc[:, 0].max()
-                            if pd.notna(last_num):
-                                next_num = int(last_num) + 1
-                    except Exception:
-                        next_num = 1
-
-                    df_summary_new = pd.DataFrame(
-                        {
-                            "Numero de Peajes": [next_num],
-                            "Total en BS": [data.get("Total Amount", 0)],
-                        }
-                    )
-
-                    # Write summary
-                    # If it's a new sheet or file, we need the title
+                    # Write Summary (Calculo)
                     start_row_summary = 0
                     try:
                         writer.book["Calculo"]
@@ -108,7 +118,7 @@ class DataService:
                             startrow=start_row_summary,
                         )
                     except KeyError:
-                        # Create sheet with title
+                        # Create sheet if it somehow disappeared but file exists
                         title_df = pd.DataFrame([[f"Calculo peajes {current_year}"]])
                         title_df.to_excel(
                             writer, sheet_name="Calculo", index=False, header=False
@@ -121,15 +131,7 @@ class DataService:
                             startrow=1,
                         )
 
-                    # Apply centering to Calculo sheet
-                    from openpyxl.styles import Alignment
-
-                    ws = writer.book["Calculo"]
-                    for row in ws.iter_rows():
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-
-                    # Handle Detail Sheet (Detalle)
+                    # Write Detalle (Detalle)
                     start_row_detail = 0
                     try:
                         writer.book["Detalle"]
@@ -145,6 +147,29 @@ class DataService:
                         df_detail_new.to_excel(
                             writer, sheet_name="Detalle", index=False, header=True
                         )
+
+                    # Apply styling (Centering and Borders)
+                    from openpyxl.styles import Alignment, Border, Side
+                    thin_border = Border(
+                        left=Side(style="thin"),
+                        right=Side(style="thin"),
+                        top=Side(style="thin"),
+                        bottom=Side(style="thin"),
+                    )
+
+                    # Style Calculo sheet (headers on row 2)
+                    ws_calc = writer.book["Calculo"]
+                    for row in ws_calc.iter_rows(min_row=2):
+                        for cell in row:
+                            cell.alignment = Alignment(horizontal="center")
+                            cell.border = thin_border
+
+                    # Style Detalle sheet (headers on row 1)
+                    ws_detail = writer.book["Detalle"]
+                    for row in ws_detail.iter_rows(min_row=1):
+                        for cell in row:
+                            cell.alignment = Alignment(horizontal="center")
+                            cell.border = thin_border
             else:
                 # Create new file
                 with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
@@ -154,13 +179,7 @@ class DataService:
                         writer, sheet_name="Calculo", index=False, header=False
                     )
 
-                    # Summary headers and first row
-                    df_summary_new = pd.DataFrame(
-                        {
-                            "Numero de Peajes": [1],
-                            "Total en BS": [data.get("Total Amount", 0)],
-                        }
-                    )
+                    # Summary
                     df_summary_new.to_excel(
                         writer,
                         sheet_name="Calculo",
@@ -169,18 +188,33 @@ class DataService:
                         startrow=1,
                     )
 
-                    # Apply centering to Calculo sheet
-                    from openpyxl.styles import Alignment
-
-                    ws = writer.book["Calculo"]
-                    for row in ws.iter_rows():
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-
-                    # Detail sheet
+                    # Detail
                     df_detail_new.to_excel(
                         writer, sheet_name="Detalle", index=False, header=True
                     )
+
+                    # Apply styling (Centering and Borders)
+                    from openpyxl.styles import Alignment, Border, Side
+                    thin_border = Border(
+                        left=Side(style="thin"),
+                        right=Side(style="thin"),
+                        top=Side(style="thin"),
+                        bottom=Side(style="thin"),
+                    )
+
+                    # Style Calculo sheet
+                    ws_calc = writer.book["Calculo"]
+                    for row in ws_calc.iter_rows(min_row=2):  # Header and data
+                        for cell in row:
+                            cell.alignment = Alignment(horizontal="center")
+                            cell.border = thin_border
+
+                    # Style Detalle sheet
+                    ws_detail = writer.book["Detalle"]
+                    for row in ws_detail.iter_rows(min_row=1):  # Header and data
+                        for cell in row:
+                            cell.alignment = Alignment(horizontal="center")
+                            cell.border = thin_border
 
             return True, f"Saved to {filename}"
 

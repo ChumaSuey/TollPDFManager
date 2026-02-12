@@ -199,6 +199,10 @@ class TollManagerApp(ttk.Frame):
 
             if success:
                 messagebox.showinfo("Success", msg)
+                
+                # Mark as processed in UI
+                self.pdf_list.mark_as_processed(pdf_name)
+                
                 # 3. Next (Page or File)
                 # This calls next_page(), which now triggers self.calculator.clear_all()
                 self.next_page()

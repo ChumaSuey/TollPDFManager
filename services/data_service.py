@@ -224,3 +224,67 @@ class DataService:
             traceback.print_exc()
             print(f"Error saving to Excel: {e}")
             return False, str(e)
+
+    @staticmethod
+    def get_processed_tolls(folder_path=None):
+        """
+        Returns a set of PDF filenames that have already been processed
+        (appear in the 'PDF Name' column of the 'Detalle' sheet).
+        """
+        try:
+            file_path, _ = DataService.get_excel_path(folder_path)
+            if not os.path.exists(file_path):
+                return set()
+
+            # Read only the 'PDF Name' column from 'Detalle' sheet if it exists
+            # We don't know the exact column index, but we know the header "PDF Name"
+            # It's safer to read the whole sheet or specific columns by name if possible.
+            # However, pd.read_excel might fail if sheet doesn't exist.
+            try:
+                df = pd.read_excel(file_path, sheet_name="Detalle")
+                if "PDF Name" in df.columns:
+                    # Return set of non-null values
+                    return set(df["PDF Name"].dropna().astype(str).unique())
+            except ValueError:
+                # Sheet 'Detalle' usually raises ValueError if not found in some pandas versions/engines
+                pass
+            except Exception as e:
+                print(f"Error reading processed tolls: {e}")
+
+            return set()
+        except Exception as e:
+            print(f"Error in get_processed_tolls: {e}")
+            return set()
+            return set()
+        except Exception as e:
+            print(f"Error in get_processed_tolls: {e}")
+            return set()
+
+    @staticmethod
+    def load_flags():
+        """
+        Returns a set of file paths that are flagged for review.
+        """
+        flags_file = "flags.json"
+        if os.path.exists(flags_file):
+            try:
+                with open(flags_file, "r") as f:
+                    data = json.load(f)
+                    return set(data)
+            except Exception as e:
+                print(f"Error loading flags: {e}")
+        return set()
+
+    @staticmethod
+    def save_flags(flags_set):
+        """
+        Saves the set of flagged file paths to flags.json.
+        """
+        flags_file = "flags.json"
+        try:
+            with open(flags_file, "w") as f:
+                json.dump(list(flags_set), f, indent=4)
+            return True
+        except Exception as e:
+            print(f"Error saving flags: {e}")
+            return False

@@ -43,6 +43,7 @@ If the list calculation is slightly off but you know the real total:
 - **Auto-Clear**: When you switch pages, the calculator wipes itself clean. You never have to worry about saving the previous page's data to the wrong page.
 - **Flag for Review**: See a weird page? Click **"Flag for Review"**.
   - It signals the file with a **🚩** icon in the file list.
+  - **Persistence**: Flags are saved automatically, so you can come back to them later even after restarting the app.
   - Click **"Unflag"** to remove it once resolved.
 
 ## 💾 Data Saving
@@ -59,7 +60,13 @@ If the list calculation is slightly off but you know the real total:
 - **Shortcuts**:
   - `Left/Right Arrow`: Prev/Next Page.
   - `Ctrl + Wheel`: Zoom.
+  - `Ctrl + Wheel`: Zoom.
   - `Ctrl + H`: Toggle Highlight (Yellow marker).
+  - **Calculator Shortcuts**:
+    - `Double-Click` on a row to edit it.
+    - `Enter`: Save manual entry.
+    - `Esc`: Cancel editing / Clear inputs.
+    - `Delete`: Remove selected item.
 
 ### 4. Highlight Function 📌
 
@@ -68,3 +75,11 @@ The **highlight** function serves as an internal marker for you to know where to
 - **How to use**: Select a PDF and click the **📌 Highlight Item** button, or press `Ctrl + H`.
 - **Effect**: The selected item in the "Archive Space" list will be highlighted with a soft yellow background.
 - **Toggle**: Click **📍 Unhighlight** or press `Ctrl + H` again to remove the marker.
+
+### 5. Processed Tracking ✅
+
+The app automatically tracks which files have been saved to the Excel export.
+
+- **Visual Indicator**: Files that have been processed will appear with a **Green Checkmark (✅)** in the file list.
+- **Automatic Update**: When you click "Save & Next", the current file is immediately marked as processed.
+- **Persistence**: This status is read directly from your Excel file, so it remembers your progress even if you restart the app.

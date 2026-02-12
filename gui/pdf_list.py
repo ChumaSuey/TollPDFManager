@@ -33,6 +33,8 @@ class PDFList(ttk.Frame):
 
         # Configure tags for highlighting
         self.tree.tag_configure("highlight", background="#FFFFCC")  # Soft pastel yellow
+        # Configure tag for processed files
+        self.tree.tag_configure("processed", foreground="green")  # Green text for processed
 
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
@@ -72,6 +74,8 @@ class PDFList(ttk.Frame):
             config["export_folder"] = folder
             DataService.save_config(config)
             self.update_export_ui(folder)
+            # Refresh list to update processed status based on new excel location
+            self.refresh_list()
 
     def update_export_ui(self, folder=None):
         from services.data_service import DataService
@@ -103,48 +107,127 @@ class PDFList(ttk.Frame):
             self.refresh_list()
 
     def refresh_list(self):
+        from services.data_service import DataService
+
         # Clear
         for item in self.tree.get_children():
             self.tree.delete(item)
 
         try:
+            processed_files = DataService.get_processed_tolls(self.current_dir)
+        except Exception:
+            processed_files = set()
+
+        try:
+            # Load persistent flags
+            flagged_paths = DataService.load_flags()
+        except Exception:
+            flagged_paths = set()
+
+        try:
             files = [
                 f for f in os.listdir(self.current_dir) if f.lower().endswith(".pdf")
             ]
-            print(files)
             files.sort(key=natural_keys)
 
             print(f"Refreshed list from: {self.current_dir}")  # Debug
             for f in files:
                 full_path = os.path.normpath(os.path.join(self.current_dir, f))
+                
+                tags = []
+                display_text = f
+                
+                # Check processed
+                if f in processed_files:
+                    tags.append("processed")
+                    display_text = "✅ " + display_text
+                
+                # Check flagged (using full path)
+                if full_path in flagged_paths:
+                    display_text = "🚩 " + display_text
+                    # Ensure flag comes after checkmark if both exist?
+                    # If previously "✅ file", now "🚩 ✅ file"?
+                    # Or "✅ 🚩 file"? Use consistent order.
+                    # My logic above puts it straight.
+                    # If processed was processed: "✅ file"
+                    # If flag added: "🚩 ✅ file" which is fine.
+
                 # values must be a tuple, ensure trailing comma
-                self.tree.insert("", "end", text=f, values=(full_path,))
+                self.tree.insert("", "end", text=display_text, values=(full_path,), tags=tags)
         except Exception as e:
             print(f"Error reading directory: {e}")
+
+    def mark_as_processed(self, filename):
+        """
+        Updates the visual status of a file to 'processed' without reloading the whole list.
+        """
+        target_path = os.path.normpath(os.path.join(self.current_dir, filename))
+        
+        for child in self.tree.get_children():
+            item_vals = self.tree.item(child, "values")
+            if item_vals and item_vals[0] == target_path:
+                current_text = self.tree.item(child, "text")
+                current_tags = list(self.tree.item(child, "tags"))
+                
+                if "processed" not in current_tags:
+                    current_tags.append("processed")
+                    if not "✅" in current_text:
+                        # Find where to insert checkmark
+                        # If startswith 🚩, insert after? Or before?
+                        # Let's say: "✅ 🚩 file.pdf" is cleanest.
+                        if "🚩 " in current_text:
+                             # "🚩 file" -> "✅ 🚩 file"
+                             new_text = "✅ " + current_text
+                        else:
+                             new_text = "✅ " + current_text
+                        
+                        self.tree.item(child, text=new_text, tags=current_tags)
+                    else:
+                        self.tree.item(child, tags=current_tags)
+                return
 
     def on_select(self, event):
         # To be bound by the main app controller
         pass
 
     def toggle_flag_current(self):
+        from services.data_service import DataService
+
         selection = self.tree.selection()
         if not selection:
             return
 
         item_id = selection[0]
         current_text = self.tree.item(item_id, "text")
+        full_path = self.tree.item(item_id, "values")[0]
+
+        # Load current flags
+        flagged_paths = DataService.load_flags()
 
         prefix = "🚩 "
+        is_flagged = False
 
-        if current_text.startswith(prefix):
+        if "🚩 " in current_text:
             # Unflag
-            new_text = current_text[len(prefix) :]
+            new_text = current_text.replace("🚩 ", "", 1)
+            flagged_paths.discard(full_path)
             is_flagged = False
         else:
             # Flag
-            new_text = prefix + current_text
+            # Insert 🚩. If starts with ✅, insert after.
+            if current_text.strip().startswith("✅"):
+                 # "✅ file" -> "✅ 🚩 file"
+                 # Find index of first char after check
+                 new_text = current_text.replace("✅ ", "✅ 🚩 ", 1)
+            else:
+                 new_text = prefix + current_text
+            
+            flagged_paths.add(full_path)
             is_flagged = True
 
+        # Save persistence
+        DataService.save_flags(flagged_paths)
+        
         self.tree.item(item_id, text=new_text)
         return is_flagged
 

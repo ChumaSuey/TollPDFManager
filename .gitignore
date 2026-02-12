@@ -5,3 +5,7 @@ __pycache__/
 .vscode/
 Peajes 2026 Calculo.xlsx
 models_list.txt
+flags.json
+config.json
+dist/
+build/

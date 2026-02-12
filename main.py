@@ -5,7 +5,8 @@ from gui.app import TollManagerApp
 def main():
     root = tk.Tk()
     root.title("Toll PDF Manager")
-    root.geometry("1400x800")
+    # root.geometry("1400x800") # Removed fixed size in favor of maximized
+    root.state('zoomed') # Start maximized on Windows
 
     # Fix for high DPI screens
     try:

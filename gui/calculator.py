@@ -139,6 +139,41 @@ class Calculator(ttk.Frame):
             side="right", padx=2
         )
 
+        # Bindings for speed optimization
+        self.tree.bind("<Double-1>", self.on_double_click)
+        self.manual_amt.bind("<Return>", self.on_return_pressed)
+        self.manual_qty.bind("<Return>", self.on_return_pressed)
+        self.manual_amt.bind("<Escape>", self.on_escape_pressed)
+        self.manual_qty.bind("<Escape>", self.on_escape_pressed)
+        
+        # Bind Delete key to tree
+        self.tree.bind("<Delete>", lambda e: self.delete_entry())
+
+    def on_double_click(self, event):
+        item = self.tree.identify_row(event.y)
+        if item:
+            # If a row is double-clicked, select it and edit
+            # identifying row doesn't select it automatically in all OS/themes on double click sometimes
+            self.tree.selection_set(item)
+            self.edit_selected()
+
+    def on_return_pressed(self, event):
+        self.add_manual_entry()
+        return "break" # Prevent default behavior if any
+
+    def on_escape_pressed(self, event):
+        # Cancel edit mode / clear inputs
+        self.manual_amt.delete(0, tk.END)
+        self.manual_qty.delete(0, tk.END)
+        self.manual_qty.insert(0, "1")
+        
+        self.editing_item_id = None
+        self.add_btn.config(text="Add")
+        
+        # Determine where to focus? Maybe keep focus in amount to start fresh
+        self.manual_amt.focus_set()
+        return "break"
+
     def get_verified_amount(self):
         return self.verify_value.get()
 
@@ -147,8 +182,14 @@ class Calculator(ttk.Frame):
 
     def add_manual_entry(self):
         try:
-            amt = float(self.manual_amt.get())
-            qty = int(self.manual_qty.get())
+            amt_val = self.manual_amt.get()
+            if not amt_val:
+                return # Do nothing if empty
+
+            amt = float(amt_val)
+            qty_val = self.manual_qty.get()
+            qty = int(qty_val) if qty_val else 1
+            
             sub = amt * qty
 
             if self.editing_item_id:
@@ -163,10 +204,13 @@ class Calculator(ttk.Frame):
                 self.tree.insert("", "end", values=(f"${amt:.2f}", qty, f"${sub:.2f}"))
 
             self.recalculate()
-            # Reset
+            
+            # Reset and Focus for rapid entry
             self.manual_amt.delete(0, tk.END)
             self.manual_qty.delete(0, tk.END)
             self.manual_qty.insert(0, "1")
+            self.manual_amt.focus_set()
+            
         except ValueError:
             pass  # Ignore invalid inputs
 
@@ -193,6 +237,10 @@ class Calculator(ttk.Frame):
         # Set state
         self.editing_item_id = item_id
         self.add_btn.config(text="Update")
+        
+        # Focus amount to type immediately
+        self.manual_amt.focus_set()
+        self.manual_amt.select_range(0, tk.END)
 
     def delete_entry(self):
         selection = self.tree.selection()
@@ -206,6 +254,10 @@ class Calculator(ttk.Frame):
             self.tree.delete(item)
         self.verify_value.delete(0, tk.END)
         self.recalculate()
+        
+        # Reset edit state if clearing
+        self.editing_item_id = None
+        self.add_btn.config(text="Add")
 
     def recalculate(self):
         total = 0.0

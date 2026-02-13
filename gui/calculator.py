@@ -150,27 +150,90 @@ class Calculator(ttk.Frame):
         self.tree.bind("<Delete>", lambda e: self.delete_entry())
 
     def on_double_click(self, event):
-        item = self.tree.identify_row(event.y)
-        if item:
-            # If a row is double-clicked, select it and edit
-            # identifying row doesn't select it automatically in all OS/themes on double click sometimes
-            self.tree.selection_set(item)
-            self.edit_selected()
+        item_id = self.tree.identify_row(event.y)
+        column = self.tree.identify_column(event.x)
+
+        if not item_id:
+            return
+
+        # Columns: #1=Amount, #2=Qty, #3=Subtotal
+        # We only want to edit Amount (#1) and Qty (#2)
+        if column not in ("#1", "#2"):
+            return
+
+        # Get cell info
+        x, y, width, height = self.tree.bbox(item_id, column)
+        
+        # Get current value
+        vals = self.tree.item(item_id, "values")
+        if column == "#1":
+            # Amount
+            current_val = vals[0].replace("$", "").replace(",", "")
+        else:
+            # Qty
+            current_val = vals[1]
+
+        # Spawn Entry
+        self.entry_popup = ttk.Entry(self.tree, width=width)
+        self.entry_popup.place(x=x, y=y, width=width, height=height)
+        self.entry_popup.insert(0, current_val)
+        self.entry_popup.select_range(0, tk.END)
+        self.entry_popup.focus_set()
+
+        # Bindings for the Entry
+        self.entry_popup.bind("<Return>", lambda e: self.on_entry_confirm(item_id, column))
+        self.entry_popup.bind("<Escape>", self.on_entry_cancel)
+        self.entry_popup.bind("<FocusOut>", self.on_entry_cancel)
+
+    def on_entry_confirm(self, item_id, column):
+        try:
+            new_val = self.entry_popup.get()
+            
+            # Update data
+            current_vals = list(self.tree.item(item_id, "values"))
+            
+            if column == "#1":
+                # Validate Amount
+                if not new_val: new_val = "0"
+                amt = float(new_val)
+                current_vals[0] = f"${amt:.2f}"
+            else:
+                # Validate Qty
+                if not new_val: new_val = "1"
+                qty = int(new_val)
+                current_vals[1] = str(qty)
+
+            # Recalculate Subtotal for this row
+            amt_clean = float(current_vals[0].replace("$", "").replace(",", ""))
+            qty_clean = int(current_vals[1])
+            sub = amt_clean * qty_clean
+            current_vals[2] = f"${sub:.2f}"
+
+            # Apply to tree
+            self.tree.item(item_id, values=current_vals)
+            
+            # Recalculate Total
+            self.recalculate()
+            
+        except ValueError:
+            pass # Invalid input, ignore or could beep
+        
+        self.on_entry_cancel(None) # Destroy entry
+
+    def on_entry_cancel(self, event):
+        if hasattr(self, "entry_popup") and self.entry_popup:
+            self.entry_popup.destroy()
+            self.entry_popup = None
 
     def on_return_pressed(self, event):
         self.add_manual_entry()
         return "break" # Prevent default behavior if any
 
     def on_escape_pressed(self, event):
-        # Cancel edit mode / clear inputs
+        # Clear inputs
         self.manual_amt.delete(0, tk.END)
         self.manual_qty.delete(0, tk.END)
         self.manual_qty.insert(0, "1")
-        
-        self.editing_item_id = None
-        self.add_btn.config(text="Add")
-        
-        # Determine where to focus? Maybe keep focus in amount to start fresh
         self.manual_amt.focus_set()
         return "break"
 
@@ -192,16 +255,8 @@ class Calculator(ttk.Frame):
             
             sub = amt * qty
 
-            if self.editing_item_id:
-                # Update existing
-                self.tree.item(
-                    self.editing_item_id, values=(f"${amt:.2f}", qty, f"${sub:.2f}")
-                )
-                self.editing_item_id = None
-                self.add_btn.config(text="Add")
-            else:
-                # Add new
-                self.tree.insert("", "end", values=(f"${amt:.2f}", qty, f"${sub:.2f}"))
+            # Add new (Mode is always Add now for manual entry at bottom)
+            self.tree.insert("", "end", values=(f"${amt:.2f}", qty, f"${sub:.2f}"))
 
             self.recalculate()
             
@@ -215,32 +270,35 @@ class Calculator(ttk.Frame):
             pass  # Ignore invalid inputs
 
     def edit_selected(self):
+        # Deprecated / Fallback
+        # If user clicks button, we can maybe trigger edit on first col?
+        # Or just select and warn? 
+        # For now, let's make it trigger amount edit on selected
         selection = self.tree.selection()
         if not selection:
             return
-
+            
+        # Simulate an event? Or just reuse logic?
+        # Reusing logic requires x,y which we don't have easily without event.
+        # But we can get bbox of #1.
         item_id = selection[0]
-        vals = self.tree.item(item_id)["values"]
-        # vals: ("$5.50", "2", ...)
-
-        # Parse amount
-        amt_str = str(vals[0]).replace("$", "").replace(",", "")
-        qty_str = str(vals[1])
-
-        # Load into inputs
-        self.manual_amt.delete(0, tk.END)
-        self.manual_amt.insert(0, amt_str)
-
-        self.manual_qty.delete(0, tk.END)
-        self.manual_qty.insert(0, qty_str)
-
-        # Set state
-        self.editing_item_id = item_id
-        self.add_btn.config(text="Update")
+        # Edit Amount (#1) by default
+        x, y, width, height = self.tree.bbox(item_id, "#1")
         
-        # Focus amount to type immediately
-        self.manual_amt.focus_set()
-        self.manual_amt.select_range(0, tk.END)
+        # Get current val
+        vals = self.tree.item(item_id, "values")
+        current_val = vals[0].replace("$", "").replace(",", "")
+
+        # Spawn
+        self.entry_popup = ttk.Entry(self.tree, width=width)
+        self.entry_popup.place(x=x, y=y, width=width, height=height)
+        self.entry_popup.insert(0, current_val)
+        self.entry_popup.select_range(0, tk.END)
+        self.entry_popup.focus_set()
+
+        self.entry_popup.bind("<Return>", lambda e: self.on_entry_confirm(item_id, "#1"))
+        self.entry_popup.bind("<Escape>", self.on_entry_cancel)
+        self.entry_popup.bind("<FocusOut>", self.on_entry_cancel)
 
     def delete_entry(self):
         selection = self.tree.selection()
@@ -254,10 +312,6 @@ class Calculator(ttk.Frame):
             self.tree.delete(item)
         self.verify_value.delete(0, tk.END)
         self.recalculate()
-        
-        # Reset edit state if clearing
-        self.editing_item_id = None
-        self.add_btn.config(text="Add")
 
     def recalculate(self):
         total = 0.0

@@ -63,8 +63,8 @@ If the list calculation is slightly off but you know the real total:
   - `Ctrl + Wheel`: Zoom.
   - `Ctrl + H`: Toggle Highlight (Yellow marker).
   - **Calculator Shortcuts**:
-    - `Double-Click` on a row to edit it.
-    - `Enter`: Save manual entry.
+    - **Double-Click**: Inline edit (Amount/Qty).
+    - `Enter`: Save entry (Inline or Manual).
     - `Esc`: Cancel editing / Clear inputs.
     - `Delete`: Remove selected item.
 

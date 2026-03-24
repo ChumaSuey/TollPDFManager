@@ -226,6 +226,114 @@ class DataService:
             return False, str(e)
 
     @staticmethod
+    def has_toll_entry(pdf_name, page_number, folder_path=None):
+        """
+        Returns True if an entry exists in the Detalle sheet for the given PDF + page.
+        """
+        file_path, _ = DataService.get_excel_path(folder_path)
+        if not os.path.exists(file_path):
+            return False
+        try:
+            df = pd.read_excel(file_path, sheet_name="Detalle")
+            mask = (df["PDF Name"].astype(str) == str(pdf_name)) & \
+                   (df["Page Number"].astype(int) == int(page_number))
+            return mask.any()
+        except Exception:
+            return False
+
+    @staticmethod
+    def delete_toll_entry(pdf_name, page_number, folder_path=None):
+        """
+        Deletes a toll entry from the Excel file by matching PDF Name and Page Number.
+        Removes the corresponding row from both 'Detalle' and 'Calculo' sheets.
+        Does NOT renumber remaining entries (toll numbers map to physical paper).
+
+        Returns:
+            (bool, str): Success flag and message.
+        """
+        from openpyxl import load_workbook
+        from openpyxl.styles import Alignment, Border, Side
+
+        file_path, filename = DataService.get_excel_path(folder_path)
+
+        if not os.path.exists(file_path):
+            return False, "Excel file not found."
+
+        try:
+            # Read Detalle to find the matching row
+            df_detail = pd.read_excel(file_path, sheet_name="Detalle")
+
+            # Find matching row(s)
+            mask = (df_detail["PDF Name"].astype(str) == str(pdf_name)) & \
+                   (df_detail["Page Number"].astype(int) == int(page_number))
+
+            matches = df_detail[mask]
+            if matches.empty:
+                return False, f"No entry found for '{pdf_name}' page {page_number}."
+
+            # Get the No. value(s) to delete from Calculo
+            entry_numbers = matches["No."].tolist()
+
+            # Remove from Detalle
+            df_detail = df_detail[~mask]
+
+            # Read and filter Calculo
+            df_calculo = pd.read_excel(file_path, sheet_name="Calculo", skiprows=1)
+            calculo_mask = df_calculo["Numero de Peajes"].isin(entry_numbers)
+            df_calculo = df_calculo[~calculo_mask]
+
+            # Rewrite the Excel file
+            current_year = datetime.now().year
+
+            with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
+                # Write Calculo sheet
+                title_df = pd.DataFrame([[f"Calculo peajes {current_year}"]])
+                title_df.to_excel(
+                    writer, sheet_name="Calculo", index=False, header=False
+                )
+                if not df_calculo.empty:
+                    df_calculo.to_excel(
+                        writer, sheet_name="Calculo", index=False, header=True, startrow=1
+                    )
+                else:
+                    # Write just headers if empty
+                    pd.DataFrame(columns=["Numero de Peajes", "Total en BS"]).to_excel(
+                        writer, sheet_name="Calculo", index=False, header=True, startrow=1
+                    )
+
+                # Write Detalle sheet
+                df_detail.to_excel(
+                    writer, sheet_name="Detalle", index=False, header=True
+                )
+
+                # Apply styling
+                thin_border = Border(
+                    left=Side(style="thin"),
+                    right=Side(style="thin"),
+                    top=Side(style="thin"),
+                    bottom=Side(style="thin"),
+                )
+
+                ws_calc = writer.book["Calculo"]
+                for row in ws_calc.iter_rows(min_row=2):
+                    for cell in row:
+                        cell.alignment = Alignment(horizontal="center")
+                        cell.border = thin_border
+
+                ws_detail = writer.book["Detalle"]
+                for row in ws_detail.iter_rows(min_row=1):
+                    for cell in row:
+                        cell.alignment = Alignment(horizontal="center")
+                        cell.border = thin_border
+
+            return True, f"Removed toll #{entry_numbers[0]} from {filename}"
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            return False, str(e)
+
+    @staticmethod
     def get_processed_tolls(folder_path=None):
         """
         Returns a set of PDF filenames that have already been processed

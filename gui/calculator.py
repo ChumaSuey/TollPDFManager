@@ -66,8 +66,11 @@ class Calculator(ttk.Frame):
         )
         self.analyze_btn.pack(fill="x", pady=5)
 
-        self.save_btn = ttk.Button(self.btn_frame, text="Save & Next")
+        self.save_btn = ttk.Button(self.btn_frame, text="Save & Next (Ctrl+S)")
         self.save_btn.pack(fill="x", pady=5)
+
+        self.clean_btn = ttk.Button(self.btn_frame, text="🧹 Clean Toll (Ctrl+D)")
+        self.clean_btn.pack(fill="x", pady=5)
 
         self.flag_btn = ttk.Button(self.btn_frame, text="Flag for Review")
         self.flag_btn.pack(fill="x", pady=5)

@@ -186,6 +186,34 @@ class PDFList(ttk.Frame):
                         self.tree.item(child, tags=current_tags)
                 return
 
+    def unmark_as_processed(self, filename):
+        """
+        Removes the 'processed' visual mark from a file if it has no remaining
+        entries in the Excel. Checks the Excel first before unmarking.
+        """
+        from services.data_service import DataService
+
+        # Check if ANY entries remain for this PDF
+        remaining = DataService.get_processed_tolls(self.current_dir)
+
+        if filename in remaining:
+            # Other pages from this PDF still exist, keep the mark
+            return
+
+        target_path = os.path.normpath(os.path.join(self.current_dir, filename))
+
+        for child in self.tree.get_children():
+            item_vals = self.tree.item(child, "values")
+            if item_vals and item_vals[0] == target_path:
+                current_text = self.tree.item(child, "text")
+                current_tags = list(self.tree.item(child, "tags"))
+
+                if "processed" in current_tags:
+                    current_tags.remove("processed")
+                    new_text = current_text.replace("✅ ", "", 1)
+                    self.tree.item(child, text=new_text, tags=current_tags)
+                return
+
     def on_select(self, event):
         # To be bound by the main app controller
         pass

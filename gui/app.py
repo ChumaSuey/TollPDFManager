@@ -45,12 +45,20 @@ class TollManagerApp(ttk.Frame):
         # Bind Save Button from Calculator
         self.calculator.save_btn.config(command=self.on_save_next)
         self.calculator.analyze_btn.config(command=self.on_run_analysis)
+        self.calculator.clean_btn.config(command=self.on_clean_toll)
         self.calculator.flag_btn.config(command=self.on_flag_file)
         self.calculator.highlight_btn.config(command=self.on_highlight_file)
 
         # Keyboard shortcuts
         parent.bind("<Control-h>", lambda e: self.on_highlight_file())
         parent.bind("<Control-H>", lambda e: self.on_highlight_file())
+        parent.bind("<Control-s>", lambda e: self.on_save_next())
+        parent.bind("<Control-S>", lambda e: self.on_save_next())
+        parent.bind("<Control-d>", lambda e: self.on_clean_toll())
+        parent.bind("<Control-D>", lambda e: self.on_clean_toll())
+
+        # Start with Clean Toll disabled
+        self.calculator.clean_btn.config(state="disabled")
 
         # Load Config & Init UI
         self.pdf_list.update_export_ui()
@@ -98,6 +106,20 @@ class TollManagerApp(ttk.Frame):
         self.pdf_viewer.display_image(
             img, page_idx + 1, self.pdf_handler.get_page_count()
         )
+        self.update_clean_btn_state()
+
+    def update_clean_btn_state(self):
+        """Enable/disable the Clean Toll button based on whether this page has a saved entry."""
+        if not self.pdf_handler.path:
+            self.calculator.clean_btn.config(state="disabled")
+            return
+        pdf_name = os.path.basename(self.pdf_handler.path)
+        page_num = self.pdf_handler.current_page_idx + 1
+        folder = self.pdf_list.current_dir
+        if DataService.has_toll_entry(pdf_name, page_num, folder):
+            self.calculator.clean_btn.config(state="normal")
+        else:
+            self.calculator.clean_btn.config(state="disabled")
 
     def on_highlight_file(self, event=None):
         is_highlighted = self.pdf_list.toggle_highlight_current()
@@ -213,6 +235,49 @@ class TollManagerApp(ttk.Frame):
                 "Critical Error", f"An unexpected error occurred during save:\n{str(e)}"
             )
             print(f"Critical Error in on_save_next: {e}")
+
+    def on_clean_toll(self):
+        """Removes the current page's toll entry from the Excel file."""
+        # Guard: respect disabled state when triggered via hotkey
+        if str(self.calculator.clean_btn.cget("state")) == "disabled":
+            return
+        try:
+            if not self.pdf_handler.path:
+                messagebox.showerror("Error", "No PDF open.")
+                return
+
+            pdf_name = os.path.basename(self.pdf_handler.path)
+            page_num = self.pdf_handler.current_page_idx + 1
+
+            # Confirm before deleting
+            confirm = messagebox.askyesno(
+                "Clean Toll",
+                f"Remove the saved entry for:\n\n"
+                f"File: {pdf_name}\n"
+                f"Page: {page_num}\n\n"
+                f"This will delete it from the Excel file.",
+            )
+            if not confirm:
+                return
+
+            folder = self.pdf_list.current_dir
+            success, msg = DataService.delete_toll_entry(pdf_name, page_num, folder)
+
+            if success:
+                messagebox.showinfo("Cleaned", msg)
+                # Remove processed mark from UI
+                self.pdf_list.unmark_as_processed(pdf_name)
+                # Disable button since entry is gone
+                self.update_clean_btn_state()
+            else:
+                messagebox.showwarning("Not Found", msg)
+
+        except Exception as e:
+            messagebox.showerror(
+                "Critical Error",
+                f"An unexpected error occurred:\n{str(e)}",
+            )
+            print(f"Critical Error in on_clean_toll: {e}")
 
     def on_run_analysis(self):
         if not self.pdf_handler.path:

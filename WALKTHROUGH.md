@@ -60,7 +60,6 @@ If the list calculation is slightly off but you know the real total:
 - **Shortcuts**:
   - `Left/Right Arrow`: Prev/Next Page.
   - `Ctrl + Wheel`: Zoom.
-  - `Ctrl + Wheel`: Zoom.
   - `Ctrl + H`: Toggle Highlight (Yellow marker).
   - **Calculator Shortcuts**:
     - **Double-Click**: Inline edit (Amount/Qty).
@@ -83,3 +82,19 @@ The app automatically tracks which files have been saved to the Excel export.
 - **Visual Indicator**: Files that have been processed will appear with a **Green Checkmark (✅)** in the file list.
 - **Automatic Update**: When you click "Save & Next", the current file is immediately marked as processed.
 - **Persistence**: This status is read directly from your Excel file, so it remembers your progress even if you restart the app.
+
+## 📁 Project Maintenance
+
+### Branch Migration
+
+To simplify development, the repository has been reorganized:
+
+- **`main`**: The primary development branch (formerly the Gemini V2 refactor).
+- **`legacy`**: The old production branch, kept for reference.
+
+### Scripts Directory
+
+Maintenance and utility scripts are now organized in the `scripts/` folder:
+
+- `debug_models.py`: A utility to list available Gemini models and save them to `models_list.txt`.
+- `models_list.txt`: A reference list of AI models supported by the system.

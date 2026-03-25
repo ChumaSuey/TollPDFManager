@@ -33,3 +33,15 @@ A Python application for managing and verifying toll PDF documents with AI assis
 - Run `python main.py` to start the application.
 - Use **"Analyze with AI"** to check a page.
 - Use **"Save & Next"** to log data and move forward.
+
+## ⌨️ Keyboard Shortcuts
+
+For a complete list of keyboard shortcuts and productivity tips, see [KEYBINDS.md](file:///c:/Users/luism/PycharmProjects/TollPDFManager/KEYBINDS.md).
+
+## 📁 Project Structure
+
+- `gui/`: Application interface components.
+- `services/`: Core logic and AI integration.
+- `utils/`: Common utility functions.
+- `scripts/`: Auxiliary maintenance and debug scripts (e.g., `debug_models.py`).
+- `tests/`: Automated test suite.

@@ -26,5 +26,6 @@ Here is a quick reference for all keyboard shortcuts available in the Toll PDF M
 | **`Ctrl + S`** | **Save & Next** (save entry, advance) | Global |
 | **`Ctrl + D`** | **Clean Toll** (remove entry from Excel) | Global |
 | **`Ctrl + H`** | Toggle **Highlight** on current file | Global / File List |
+| **`Ctrl + F`** | Toggle **Flag for Review** on current file | Global / File List |
 
 > **Note**: For Calculator shortcuts to work, the focus must be within the Calculator pane (e.g., clicking on the list or input boxes first).

@@ -56,6 +56,8 @@ class TollManagerApp(ttk.Frame):
         parent.bind("<Control-S>", lambda e: self.on_save_next())
         parent.bind("<Control-d>", lambda e: self.on_clean_toll())
         parent.bind("<Control-D>", lambda e: self.on_clean_toll())
+        parent.bind("<Control-f>", lambda e: self.on_flag_file())
+        parent.bind("<Control-F>", lambda e: self.on_flag_file())
 
         # Start with Clean Toll disabled
         self.calculator.clean_btn.config(state="disabled")
@@ -75,16 +77,16 @@ class TollManagerApp(ttk.Frame):
 
             # Update Flag Button Text
             if display_text.startswith("🚩 "):
-                self.calculator.flag_btn.config(text="Unflag")
+                self.calculator.flag_btn.config(text="🏁 Unflag (Ctrl+F)")
             else:
-                self.calculator.flag_btn.config(text="Flag for Review")
+                self.calculator.flag_btn.config(text="🚩 Flag for Review (Ctrl+F)")
 
             # Update Highlight Button Text
             current_tags = self.pdf_list.tree.item(selection[0], "tags")
             if "highlight" in current_tags:
-                self.calculator.highlight_btn.config(text="📍 Unhighlight")
+                self.calculator.highlight_btn.config(text="📍 Unhighlight (Ctrl+H)")
             else:
-                self.calculator.highlight_btn.config(text="📌 Highlight Item")
+                self.calculator.highlight_btn.config(text="📌 Highlight Item (Ctrl+H)")
 
             print(f"Attempting to open: {full_path}")  # Debug
             if self.pdf_handler.open_pdf(full_path):
@@ -124,9 +126,9 @@ class TollManagerApp(ttk.Frame):
     def on_highlight_file(self, event=None):
         is_highlighted = self.pdf_list.toggle_highlight_current()
         if is_highlighted:
-            self.calculator.highlight_btn.config(text="📍 Unhighlight")
+            self.calculator.highlight_btn.config(text="📍 Unhighlight (Ctrl+H)")
         else:
-            self.calculator.highlight_btn.config(text="📌 Highlight Item")
+            self.calculator.highlight_btn.config(text="📌 Highlight Item (Ctrl+H)")
         return "break"  # Prevent event propagation if needed
 
     def prev_page(self, event=None):
@@ -312,6 +314,6 @@ class TollManagerApp(ttk.Frame):
     def on_flag_file(self):
         is_flagged = self.pdf_list.toggle_flag_current()
         if is_flagged:
-            self.calculator.flag_btn.config(text="Unflag")
+            self.calculator.flag_btn.config(text="🏁 Unflag (Ctrl+F)")
         else:
-            self.calculator.flag_btn.config(text="Flag for Review")
+            self.calculator.flag_btn.config(text="🚩 Flag for Review (Ctrl+F)")

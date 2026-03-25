@@ -72,10 +72,10 @@ class Calculator(ttk.Frame):
         self.clean_btn = ttk.Button(self.btn_frame, text="🧹 Clean Toll (Ctrl+D)")
         self.clean_btn.pack(fill="x", pady=5)
 
-        self.flag_btn = ttk.Button(self.btn_frame, text="Flag for Review")
+        self.flag_btn = ttk.Button(self.btn_frame, text="🚩 Flag for Review (Ctrl+F)")
         self.flag_btn.pack(fill="x", pady=5)
 
-        self.highlight_btn = ttk.Button(self.btn_frame, text="📌 Highlight Item")
+        self.highlight_btn = ttk.Button(self.btn_frame, text="📌 Highlight Item (Ctrl+H)")
         self.highlight_btn.pack(fill="x", pady=5)
 
         # Custom Manual Entry Frame

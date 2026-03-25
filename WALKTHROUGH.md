@@ -61,6 +61,7 @@ If the list calculation is slightly off but you know the real total:
   - `Left/Right Arrow`: Prev/Next Page.
   - `Ctrl + Wheel`: Zoom.
   - `Ctrl + H`: Toggle Highlight (Yellow marker).
+  - `Ctrl + F`: Toggle Flag for Review (Flag icon).
   - **Calculator Shortcuts**:
     - **Double-Click**: Inline edit (Amount/Qty).
     - `Enter`: Save entry (Inline or Manual).

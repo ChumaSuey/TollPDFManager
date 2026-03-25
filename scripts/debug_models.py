@@ -2,8 +2,8 @@ from google import genai
 import os
 from dotenv import load_dotenv
 
-# Load .env from project root (2 levels up from scripts/debug)
-root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Load .env from project root (1 level up from scripts/)
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 load_dotenv(os.path.join(root_dir, '.env'))
 
 api_key = os.getenv("GEMINI_API_KEY")

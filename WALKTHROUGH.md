@@ -92,6 +92,8 @@ To simplify development, the repository has been reorganized:
 - **`main`**: The primary development branch (formerly the Gemini V2 refactor).
 - **`legacy`**: The old production branch, kept for reference.
 
+The local `main` branch has also been correctly linked to its remote counterpart (`origin/main`) to ensure smooth pushing and pulling.
+
 ### Scripts Directory
 
 Maintenance and utility scripts are now organized in the `scripts/` folder:

@@ -28,6 +28,14 @@ A Python application for managing and verifying toll PDF documents with AI assis
       GEMINI_API_KEY=your_key_here
       ```
 
+## 🏗️ Build
+
+To create a standalone executable:
+
+1. **Install PyInstaller**: `pip install pyinstaller`
+2. **Build**: `pyinstaller TollPDFManager.spec`
+3. The executable will be generated in the `dist/` folder.
+
 ## Usage
 
 - Run `python main.py` to start the application.

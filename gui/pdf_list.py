@@ -1,5 +1,5 @@
 import os
-from tkinter import filedialog, ttk
+from tkinter import filedialog, messagebox, ttk
 
 from utils.sort_utils import natural_keys
 
@@ -21,6 +21,12 @@ class PDFList(ttk.Frame):
             header_frame, text="📂", width=3, command=self.select_folder
         )
         self.folder_btn.pack(side="right")
+
+        # Preset Folder Button (⚡)
+        self.preset_btn = ttk.Button(
+            header_frame, text="⚡", width=3, command=self.go_to_preset_folder
+        )
+        self.preset_btn.pack(side="right", padx=(0, 5))
 
         # Treeview for file list
         self.tree = ttk.Treeview(self, show="tree", selectmode="browse")
@@ -105,6 +111,23 @@ class PDFList(ttk.Frame):
         if folder:
             self.current_dir = folder
             self.refresh_list()
+
+    def go_to_preset_folder(self):
+        from services.data_service import DataService
+
+        config = DataService.load_config()
+        preset_folder = config.get("preset_folder", "F:/HPSCANS")
+
+        if os.path.exists(preset_folder):
+            self.current_dir = preset_folder
+            self.refresh_list()
+        else:
+            messagebox.showerror(
+                "Folder Not Found",
+                f"The preset folder could not be found at:\n{preset_folder}\n\n"
+                "Please make sure your USB/pendrive is connected and has the correct path, "
+                "or configure the path in 'config.json'."
+            )
 
     def refresh_list(self):
         from services.data_service import DataService

@@ -60,7 +60,7 @@ class Calculator(ttk.Frame):
 
         self.analyze_btn = ttk.Button(
             self.btn_frame,
-            text="✨ Analyze with AI",
+            text="✨ Analyze with AI (Ctrl+A)",
             style="Accent.TButton",
             command=self.on_analyze,
         )

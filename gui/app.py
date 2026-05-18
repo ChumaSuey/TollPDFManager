@@ -50,6 +50,8 @@ class TollManagerApp(ttk.Frame):
         self.calculator.highlight_btn.config(command=self.on_highlight_file)
 
         # Keyboard shortcuts
+        parent.bind("<Control-a>", lambda e: self.on_run_analysis())
+        parent.bind("<Control-A>", lambda e: self.on_run_analysis())
         parent.bind("<Control-h>", lambda e: self.on_highlight_file())
         parent.bind("<Control-H>", lambda e: self.on_highlight_file())
         parent.bind("<Control-s>", lambda e: self.on_save_next())

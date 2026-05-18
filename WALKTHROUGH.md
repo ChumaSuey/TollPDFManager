@@ -9,6 +9,7 @@ This guide explains how to use the application effectively for your daily workfl
 - **Smart Scroll**: Clicking "Next >" at the end of a document automatically loads the *next PDF file* in the folder.
 - **Zoom**: Use the **🔍-** / **🔍+** buttons or `Ctrl + MouseWheel` to inspect stamps closely.
 - **Reset**: Click **"1:1"** to instantly restore default 100% zoom. Zoom level is remembered as you browse.
+- **Quick-Access Preset Folder**: Click the lightning bolt button (**`⚡`**) in the Archive Space header to instantly load PDFs from your preset folder (defaults to `F:/HPSCANS`). If the folder is not found, a helpful warning dialog will let you know.
 
 ### 2. The Calculator (Right Pane)
 
@@ -83,6 +84,14 @@ The app automatically tracks which files have been saved to the Excel export.
 - **Visual Indicator**: Files that have been processed will appear with a **Green Checkmark (✅)** in the file list.
 - **Automatic Update**: When you click "Save & Next", the current file is immediately marked as processed.
 - **Persistence**: This status is read directly from your Excel file, so it remembers your progress even if you restart the app.
+
+## ⚙️ Configuration
+
+The application stores custom folder settings in a file named `config.json` in the project root directory. You can configure the following keys:
+- **`export_folder`**: The directory where Excel reports are saved (defaults to `F:/`).
+- **`preset_folder`**: The quick-access folder loaded by clicking the `⚡` button (defaults to `F:/HPSCANS`).
+
+If you ever need to change these paths (e.g., if your USB/pendrive drive letter changes), simply open `config.json` in any text editor, update the paths, and save the file. The application will apply and use your new paths immediately!
 
 ## 📁 Project Maintenance
 

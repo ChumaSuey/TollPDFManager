@@ -23,6 +23,7 @@ Here is a quick reference for all keyboard shortcuts available in the Toll PDF M
 
 | Shortcut | Action | Context |
 | :--- | :--- | :--- |
+| **`Ctrl + A`** | **Analyze with AI** (run Gemini analysis) | Global |
 | **`Ctrl + S`** | **Save & Next** (save entry, advance) | Global |
 | **`Ctrl + D`** | **Clean Toll** (remove entry from Excel) | Global |
 | **`Ctrl + H`** | Toggle **Highlight** on current file | Global / File List |

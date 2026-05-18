@@ -4,7 +4,7 @@ A Python application for managing and verifying toll PDF documents with AI assis
 
 ## Features
 
-- **Archive Space**: Browse and manage PDF files naturally sorted.
+- **Archive Space**: Browse and manage PDF files naturally sorted. Includes a **Quick-Access Preset Folder button (`⚡`)** to load files instantly from a configured folder (e.g., `F:/HPSCANS`).
 - **PDF Viewer**: Zoomable viewer with smart navigation (Page & File).
 - **AI Analysis**: Extracts toll amounts using Google Gemini AI.
 - **Verification**: Calculus pane for manual review and correction.

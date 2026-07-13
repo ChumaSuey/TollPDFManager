@@ -13,29 +13,64 @@ class DataService:
     def load_config():
         if os.path.exists(CONFIG_FILE):
             try:
-                with open(CONFIG_FILE, "r") as f:
-                    return json.load(f)
-            except Exception as e:
-                print(f"Error loading config: {e}")
+                with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if not content:
+                        return {}
+                    return json.loads(content)
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Error loading config: {e}. Resetting to defaults.")
+                try:
+                    os.rename(CONFIG_FILE, CONFIG_FILE + ".corrupted")
+                except Exception:
+                    pass
         return {}
 
     @staticmethod
     def save_config(config):
         try:
-            with open(CONFIG_FILE, "w") as f:
+            tmp_file = CONFIG_FILE + ".tmp"
+            with open(tmp_file, "w", encoding="utf-8") as f:
                 json.dump(config, f, indent=4)
+            os.replace(tmp_file, CONFIG_FILE)
             return True
         except Exception as e:
             print(f"Error saving config: {e}")
+            try:
+                os.remove(CONFIG_FILE + ".tmp")
+            except Exception:
+                pass
             return False
+
+    @staticmethod
+    def _apply_excel_styling(workbook):
+        from openpyxl.styles import Alignment, Border, Side
+
+        thin_border = Border(
+            left=Side(style="thin"),
+            right=Side(style="thin"),
+            top=Side(style="thin"),
+            bottom=Side(style="thin"),
+        )
+
+        if "Calculo" in workbook.sheetnames:
+            ws_calc = workbook["Calculo"]
+            for row in ws_calc.iter_rows(min_row=2):
+                for cell in row:
+                    cell.alignment = Alignment(horizontal="center")
+                    cell.border = thin_border
+
+        if "Detalle" in workbook.sheetnames:
+            ws_detail = workbook["Detalle"]
+            for row in ws_detail.iter_rows(min_row=1):
+                for cell in row:
+                    cell.alignment = Alignment(horizontal="center")
+                    cell.border = thin_border
 
     @staticmethod
     def get_excel_path(folder_path=None):
         config = DataService.load_config()
-        # Priority: Config > Argument > current dir
-        base_folder = config.get("export_folder", folder_path)
-        if not base_folder:
-            base_folder = os.getcwd()
+        base_folder = folder_path or config.get("export_folder") or os.getcwd()
 
         current_year = datetime.now().year
         filename = f"Peajes {current_year} Calculo.xlsx"
@@ -149,27 +184,7 @@ class DataService:
                         )
 
                     # Apply styling (Centering and Borders)
-                    from openpyxl.styles import Alignment, Border, Side
-                    thin_border = Border(
-                        left=Side(style="thin"),
-                        right=Side(style="thin"),
-                        top=Side(style="thin"),
-                        bottom=Side(style="thin"),
-                    )
-
-                    # Style Calculo sheet (headers on row 2)
-                    ws_calc = writer.book["Calculo"]
-                    for row in ws_calc.iter_rows(min_row=2):
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-                            cell.border = thin_border
-
-                    # Style Detalle sheet (headers on row 1)
-                    ws_detail = writer.book["Detalle"]
-                    for row in ws_detail.iter_rows(min_row=1):
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-                            cell.border = thin_border
+                    DataService._apply_excel_styling(writer.book)
             else:
                 # Create new file
                 with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
@@ -194,27 +209,7 @@ class DataService:
                     )
 
                     # Apply styling (Centering and Borders)
-                    from openpyxl.styles import Alignment, Border, Side
-                    thin_border = Border(
-                        left=Side(style="thin"),
-                        right=Side(style="thin"),
-                        top=Side(style="thin"),
-                        bottom=Side(style="thin"),
-                    )
-
-                    # Style Calculo sheet
-                    ws_calc = writer.book["Calculo"]
-                    for row in ws_calc.iter_rows(min_row=2):  # Header and data
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-                            cell.border = thin_border
-
-                    # Style Detalle sheet
-                    ws_detail = writer.book["Detalle"]
-                    for row in ws_detail.iter_rows(min_row=1):  # Header and data
-                        for cell in row:
-                            cell.alignment = Alignment(horizontal="center")
-                            cell.border = thin_border
+                    DataService._apply_excel_styling(writer.book)
 
             return True, f"Saved to {filename}"
 
@@ -251,8 +246,6 @@ class DataService:
         Returns:
             (bool, str): Success flag and message.
         """
-        from openpyxl import load_workbook
-        from openpyxl.styles import Alignment, Border, Side
 
         file_path, filename = DataService.get_excel_path(folder_path)
 
@@ -307,24 +300,7 @@ class DataService:
                 )
 
                 # Apply styling
-                thin_border = Border(
-                    left=Side(style="thin"),
-                    right=Side(style="thin"),
-                    top=Side(style="thin"),
-                    bottom=Side(style="thin"),
-                )
-
-                ws_calc = writer.book["Calculo"]
-                for row in ws_calc.iter_rows(min_row=2):
-                    for cell in row:
-                        cell.alignment = Alignment(horizontal="center")
-                        cell.border = thin_border
-
-                ws_detail = writer.book["Detalle"]
-                for row in ws_detail.iter_rows(min_row=1):
-                    for cell in row:
-                        cell.alignment = Alignment(horizontal="center")
-                        cell.border = thin_border
+                DataService._apply_excel_styling(writer.book)
 
             return True, f"Removed toll #{entry_numbers[0]} from {filename}"
 
@@ -363,10 +339,6 @@ class DataService:
         except Exception as e:
             print(f"Error in get_processed_tolls: {e}")
             return set()
-            return set()
-        except Exception as e:
-            print(f"Error in get_processed_tolls: {e}")
-            return set()
 
     @staticmethod
     def load_flags():
@@ -376,23 +348,37 @@ class DataService:
         flags_file = "flags.json"
         if os.path.exists(flags_file):
             try:
-                with open(flags_file, "r") as f:
-                    data = json.load(f)
+                with open(flags_file, "r", encoding="utf-8") as f:
+                    content = f.read().strip()
+                    if not content:
+                        return set()
+                    data = json.loads(content)
                     return set(data)
-            except Exception as e:
-                print(f"Error loading flags: {e}")
+            except (json.JSONDecodeError, Exception) as e:
+                print(f"Error loading flags: {e}. Resetting flags.")
+                try:
+                    os.rename(flags_file, flags_file + ".corrupted")
+                except Exception:
+                    pass
         return set()
 
     @staticmethod
     def save_flags(flags_set):
         """
         Saves the set of flagged file paths to flags.json.
+        Uses atomic write to avoid corruption.
         """
         flags_file = "flags.json"
+        tmp_file = flags_file + ".tmp"
         try:
-            with open(flags_file, "w") as f:
+            with open(tmp_file, "w", encoding="utf-8") as f:
                 json.dump(list(flags_set), f, indent=4)
+            os.replace(tmp_file, flags_file)
             return True
         except Exception as e:
             print(f"Error saving flags: {e}")
+            try:
+                os.remove(tmp_file)
+            except Exception:
+                pass
             return False

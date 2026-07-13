@@ -173,14 +173,14 @@ class TollManagerApp(ttk.Frame):
                 # In Tkinter, selection_set triggers <<TreeviewSelect>>.
                 self.pdf_list.tree.see(next_item)  # Scroll to it
             else:
-                print("End of file list.")
+                pass  # End of file list
         elif direction == -1:
             prev_item = self.pdf_list.tree.prev(current_item)
             if prev_item:
                 self.pdf_list.tree.selection_set(prev_item)
                 self.pdf_list.tree.see(prev_item)
             else:
-                print("Start of file list.")
+                pass  # Start of file list
 
     def on_save_next(self):
         try:

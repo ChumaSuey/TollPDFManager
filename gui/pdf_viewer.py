@@ -129,13 +129,6 @@ class PDFViewer(ttk.Frame):
         self.canvas.create_image(0, 0, image=self.tk_image, anchor="nw")
         self.canvas.configure(scrollregion=self.canvas.bbox("all"))
 
-        self.page_label.config(
-            text=f"Page {page_num + 1} / {total_pages}"
-        )  # page_num is 0-indexed passed as 0, but label wants 1
-        # Wait, app.py passes 1-indexed? No wait, app.py passes 1. Let's align.
-        # App.py passed 1. So formatting there.
-        # Let's fix app.py to pass 0-indexed or fix display.
-        # Let's assume input 'page_num' is 1-based index for display.
         self.page_label.config(text=f"Page {page_num} / {total_pages}")
 
         # Enable/Disable buttons

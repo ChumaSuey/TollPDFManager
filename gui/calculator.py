@@ -45,10 +45,6 @@ class Calculator(ttk.Frame):
         self.gemini_model.set("gemini-flash-lite-latest")
         self.gemini_model.pack(fill="x", pady=(0, 10))
 
-        # ... (Buttons skipped for brevity if unchanged, but context requires them)
-        # Actually I need to be careful with context matching.
-        # I'll just match the init part I need.
-
         # State for editing
         self.editing_item_id = None
 
@@ -186,9 +182,13 @@ class Calculator(ttk.Frame):
         # Bindings for the Entry
         self.entry_popup.bind("<Return>", lambda e: self.on_entry_confirm(item_id, column))
         self.entry_popup.bind("<Escape>", self.on_entry_cancel)
-        self.entry_popup.bind("<FocusOut>", self.on_entry_cancel)
+        self.entry_popup.bind("<FocusOut>", lambda e: self.on_entry_confirm(item_id, column))
 
     def on_entry_confirm(self, item_id, column):
+        if not hasattr(self, "entry_popup") or not self.entry_popup:
+            return
+        if not self.entry_popup.winfo_exists():
+            return
         try:
             new_val = self.entry_popup.get()
             
@@ -301,7 +301,7 @@ class Calculator(ttk.Frame):
 
         self.entry_popup.bind("<Return>", lambda e: self.on_entry_confirm(item_id, "#1"))
         self.entry_popup.bind("<Escape>", self.on_entry_cancel)
-        self.entry_popup.bind("<FocusOut>", self.on_entry_cancel)
+        self.entry_popup.bind("<FocusOut>", lambda e: self.on_entry_confirm(item_id, "#1"))
 
     def delete_entry(self):
         selection = self.tree.selection()

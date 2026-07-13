@@ -1,6 +1,6 @@
 # Changelog
 
-## beta-v2 — 2026-07-13
+## beta-v2 — 2026-07-13 (latest)
 
 ### Bug Fixes
 

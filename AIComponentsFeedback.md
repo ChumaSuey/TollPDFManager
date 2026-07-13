@@ -1,5 +1,7 @@
 # AI Components Feedback
 
+**Date:** 2026-07-13
+
 ## For Nepta
 
 ### A1. [Bug] Wrong env var in `list_models()` — blocks model dropdown

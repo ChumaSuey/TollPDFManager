@@ -70,7 +70,7 @@ class DataService:
     @staticmethod
     def get_excel_path(folder_path=None):
         config = DataService.load_config()
-        base_folder = folder_path or config.get("export_folder") or os.getcwd()
+        base_folder = config.get("export_folder") or folder_path or os.getcwd()
 
         current_year = datetime.now().year
         filename = f"Peajes {current_year} Calculo.xlsx"

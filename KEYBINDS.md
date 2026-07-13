@@ -15,8 +15,10 @@ Here is a quick reference for all keyboard shortcuts available in the Toll PDF M
 | Shortcut | Action | Context |
 | :--- | :--- | :--- |
 | **`Double-Click`** | **Inline Edit** (Amount/Qty) | Calculator List |
-| **`Enter`** | **Save** (Inline or Manual) | Calculator List / Inputs |
-| **`Esc`** | **Cancel** editing / **Clear** inputs | Manual Entry Inputs |
+| **`Enter`** | **Confirm** inline edit / Add manual entry | Calculator List / Inputs |
+| **`Click Away`** | **Confirm** inline edit (auto-saves on focus out) | Calculator List |
+| **`Esc`** | **Cancel** inline edit and revert value | Inline Edit Popup |
+| **`Esc`** | **Clear** manual entry inputs | Manual Entry Inputs |
 | **`Delete`** | **Remove** the selected row | Calculator List |
 
 ## 🛠️ Tools
